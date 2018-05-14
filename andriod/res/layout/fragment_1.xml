@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/controlLayout"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <android.support.constraint.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <WebView
+            android:id="@+id/frgm_1_webview"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_alignParentStart="true"
+            android:layout_marginBottom="6dp"
+            android:layout_marginStart="6dp"
+            android:layout_marginTop="6dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintDimensionRatio="16:9"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.0" />
+
+    </android.support.constraint.ConstraintLayout>
+
+    <com.cc.stepan3.JoystickView
+        android:id="@+id/frgm_1_joystick"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginBottom="8dp" />
+
+    <TextView
+        android:id="@+id/frgm_1_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentTop="true"
+        android:layout_margin="3dp" />
+
+    <Button
+        android:id="@+id/frgm_1_button2"
+        android:layout_width="48dp"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_below="@id/frgm_1_text"
+        android:layout_marginRight="4dp"
+        android:text="SL" />
+
+    <Button
+        android:id="@+id/frgm_1_button1"
+        android:layout_width="48dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/frgm_1_text"
+        android:layout_toStartOf="@+id/frgm_1_button2"
+        android:text="WU" />
+
+    <Button
+        android:id="@+id/frgm_1_button4"
+        android:layout_width="48dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/frgm_1_button2"
+        android:layout_alignParentEnd="true"
+        android:layout_marginRight="4dp"
+        android:text="RS" />
+
+    <Button
+        android:id="@+id/frgm_1_button3"
+        android:layout_width="48dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/frgm_1_button1"
+        android:layout_toStartOf="@+id/frgm_1_button4"
+        android:text="CT" />
+
+    <Button
+        android:id="@+id/frgm_1_button6"
+        android:layout_width="48dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/frgm_1_button4"
+        android:layout_alignParentEnd="true"
+        android:layout_marginRight="4dp"
+        android:text="TS" />
+
+    <Button
+        android:id="@+id/frgm_1_button5"
+        android:layout_width="48dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/frgm_1_button3"
+        android:layout_toStartOf="@+id/frgm_1_button6"
+        android:text="AR" />
+
+</RelativeLayout>
