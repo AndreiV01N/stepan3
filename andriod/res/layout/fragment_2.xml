@@ -1,15 +1,222 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<TableLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <TextView
-        android:id="@+id/frgm_2"
+    <TableRow
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:gravity="center"
-        android:text="PID tuning.." />
+        android:layout_height="match_parent">
 
-</LinearLayout>
+        <TextView
+            android:id="@+id/frgm_2_pos_kp_text"
+            android:layout_gravity="center_vertical"
+            android:text="@string/pos_kp_bar_title" />
+
+        <TextView
+            android:id="@+id/frgm_2_pos_kp_text_val"
+            android:layout_gravity="center_vertical"
+            android:textStyle="bold"
+            android:fontFamily="monospace"
+            android:maxLines="1"
+            android:maxLength="5"
+            android:ellipsize="end" />
+
+        <SeekBar
+            android:id="@+id/frgm_2_pos_kp_bar"
+            style="@style/Widget.AppCompat.SeekBar.Discrete"
+            android:layout_width="400dp"
+            android:layout_height="40dp"
+            android:max="20"
+            android:progress="3" />
+
+        <Button
+            android:id="@+id/frgm_2_pos_kp_default"
+            android:layout_width="48dp"
+            android:layout_height="40dp"
+            android:text="@string/default_button_title" />
+    </TableRow>
+
+    <TableRow
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <TextView
+            android:id="@+id/frgm_2_pos_kd_text"
+            android:layout_gravity="center_vertical"
+            android:text="@string/pos_kd_bar_title" />
+
+        <TextView
+            android:id="@+id/frgm_2_pos_kd_text_val"
+            android:layout_gravity="center_vertical"
+            android:textStyle="bold"
+            android:fontFamily="monospace"
+            android:maxLines="1"
+            android:maxLength="5"
+            android:ellipsize="end" />
+
+        <SeekBar
+            android:id="@+id/frgm_2_pos_kd_bar"
+            style="@style/Widget.AppCompat.SeekBar.Discrete"
+            android:layout_width="400dp"
+            android:layout_height="40dp"
+            android:max="20"
+            android:progress="3" />
+
+        <Button
+            android:id="@+id/frgm_2_pos_kd_default"
+            android:layout_width="48dp"
+            android:layout_height="40dp"
+            android:text="@string/default_button_title" />
+    </TableRow>
+
+    <TableRow
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" >
+
+        <Space
+            android:layout_width="wrap_content"
+            android:layout_height="16dp" />
+    </TableRow>
+
+    <TableRow
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" >
+
+        <TextView
+            android:id="@+id/frgm_2_spd_kp_text"
+            android:layout_gravity="center_vertical"
+            android:text="@string/speed_kp_bar_title" />
+
+        <TextView
+            android:id="@+id/frgm_2_spd_kp_text_val"
+            android:layout_gravity="center_vertical"
+            android:textStyle="bold"
+            android:fontFamily="monospace"
+            android:maxLines="1"
+            android:maxLength="5"
+            android:ellipsize="end" />
+
+        <SeekBar
+            android:id="@+id/frgm_2_spd_kp_bar"
+            style="@style/Widget.AppCompat.SeekBar.Discrete"
+            android:layout_width="400dp"
+            android:layout_height="40dp"
+            android:max="20"
+            android:progress="6" />
+
+        <Button
+            android:id="@+id/frgm_2_spd_kp_default"
+            android:layout_width="48dp"
+            android:layout_height="40dp"
+            android:text="@string/default_button_title" />
+    </TableRow>
+
+    <TableRow
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" >
+
+        <TextView
+            android:id="@+id/frgm_2_spd_ki_text"
+            android:layout_gravity="center_vertical"
+            android:text="@string/speed_ki_bar_title" />
+
+        <TextView
+            android:id="@+id/frgm_2_spd_ki_text_val"
+            android:layout_gravity="center_vertical"
+            android:textStyle="bold"
+            android:fontFamily="monospace"
+            android:maxLines="1"
+            android:maxLength="5"
+            android:ellipsize="end" />
+
+        <SeekBar
+            android:id="@+id/frgm_2_spd_ki_bar"
+            style="@style/Widget.AppCompat.SeekBar.Discrete"
+            android:layout_width="400dp"
+            android:layout_height="40dp"
+            android:max="20"
+            android:progress="6" />
+
+        <Button
+            android:id="@+id/frgm_2_spd_ki_default"
+            android:layout_width="48dp"
+            android:layout_height="40dp"
+            android:text="@string/default_button_title" />
+    </TableRow>
+
+    <TableRow
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" >
+
+        <Space
+            android:layout_width="wrap_content"
+            android:layout_height="16dp" />
+    </TableRow>
+
+    <TableRow
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" >
+
+        <TextView
+            android:id="@+id/frgm_2_stab_kp_text"
+            android:layout_gravity="center_vertical"
+            android:text="@string/stab_kp_bar_title" />
+
+        <TextView
+            android:id="@+id/frgm_2_stab_kp_text_val"
+            android:layout_gravity="center_vertical"
+            android:textStyle="bold"
+            android:fontFamily="monospace"
+            android:maxLines="1"
+            android:maxLength="5"
+            android:ellipsize="end" />
+
+        <SeekBar
+            android:id="@+id/frgm_2_stab_kp_bar"
+            style="@style/Widget.AppCompat.SeekBar.Discrete"
+            android:layout_width="400dp"
+            android:layout_height="40dp"
+            android:max="20"
+            android:progress="10" />
+
+        <Button
+            android:id="@+id/frgm_2_stab_kp_default"
+            android:layout_width="48dp"
+            android:layout_height="40dp"
+            android:text="@string/default_button_title" />
+    </TableRow>
+
+    <TableRow
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" >
+
+        <TextView
+            android:id="@+id/frgm_2_stab_kd_text"
+            android:layout_gravity="center_vertical"
+            android:text="@string/stab_kd_bar_title" />
+
+        <TextView
+            android:id="@+id/frgm_2_stab_kd_text_val"
+            android:layout_gravity="center_vertical"
+            android:textStyle="bold"
+            android:fontFamily="monospace"
+            android:maxLines="1"
+            android:maxLength="5"
+            android:ellipsize="end" />
+
+        <SeekBar
+            android:id="@+id/frgm_2_stab_kd_bar"
+            style="@style/Widget.AppCompat.SeekBar.Discrete"
+            android:layout_width="400dp"
+            android:layout_height="40dp"
+            android:max="20"
+            android:progress="10" />
+
+        <Button
+            android:id="@+id/frgm_2_stab_kd_default"
+            android:layout_width="48dp"
+            android:layout_height="40dp"
+            android:text="@string/default_button_title" />
+    </TableRow>
+</TableLayout>

@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:tools="http://schemas.android.com/tools"
-    xmlns:android="http://schemas.android.com/apk/res/android">
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
     <EditTextPreference
         android:key="edit_text_preference_1"
@@ -13,7 +12,7 @@
         android:key="edit_text_preference_2"
         android:selectAllOnFocus="true"
         android:singleLine="true"
-        android:summary="Enter the IP address here.."
-        android:title="Stepan IP address" />
+        android:summary="Provide IP_address:UDP_port here.."
+        android:title="Robot's IP_address:UDP_port" />
 
 </PreferenceScreen>

@@ -30,7 +30,6 @@ public class JoystickView extends View {
 
     private int buttonColor = buttonGray;
     private int actionCounter = 0;
-    private int actionFilter = 10; // only every 'actionFilter' action is processed
 
     private float x, y; // These are in the intern coordinates
     private double lastX, lastY; // These are in the external coordinates
@@ -83,6 +82,8 @@ public class JoystickView extends View {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+        int actionFilter = 10; // only every 'actionFilter' action is processed
+
         x = event.getX();
         y = event.getY();
         float abs = (float) Math.sqrt((x - centerX) * (x - centerX) + (y - centerY) * (y - centerY));

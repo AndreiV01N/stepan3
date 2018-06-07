@@ -11,19 +11,16 @@ import android.view.ViewGroup;
 import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.ToggleButton;
 
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
 import java.util.Locale;
 
 
 public class Fragment_1 extends Fragment implements JoystickView.OnJoystickChangeListener {
-    private DecimalFormat d = (DecimalFormat) NumberFormat.getNumberInstance(Locale.ENGLISH);
     private TextView text;
-    private double xValue, yValue;
-    private boolean joystickReleased;
     private SharedPreferences mSharedPrefs;
     private String ipAddr;
+    private String udpPort;
 
 
     @Override
@@ -48,69 +45,80 @@ public class Fragment_1 extends Fragment implements JoystickView.OnJoystickChang
         String defaultVideoURL = getResources().getString(R.string.default_video_url);
         String videoURL = mSharedPrefs.getString(getString(R.string.preference_video_url), defaultVideoURL);
 
-        String defaultIPaddr = getResources().getString(R.string.default_ip_addr);
-        ipAddr = mSharedPrefs.getString(getString(R.string.preference_ip_addr), defaultIPaddr);
+        String defaultUDPsocket = getResources().getString(R.string.default_udp_socket);
+        String udpSocket = mSharedPrefs.getString(getString(R.string.preference_udp_socket), defaultUDPsocket);
+        ipAddr = udpSocket.split(":")[0];
+        udpPort = udpSocket.split(":")[1];
 
         mWebView.getSettings().setJavaScriptEnabled(true);
         mWebView.loadUrl(videoURL);
 
-        Button btnWAKEUP = rootView.findViewById(R.id.frgm_1_button1);
+        /* --- BUTTONS --- */
+        final Button btnWAKEUP = rootView.findViewById(R.id.frgm_1_wakeup_button);
+        final Button btnSLEEP = rootView.findViewById(R.id.frgm_1_sleep_button);
+
+        final ToggleButton btnCTRL = rootView.findViewById(R.id.frgm_1_control_button);
+        Button btnRESET = rootView.findViewById(R.id.frgm_1_reset_button);
+
+        final ToggleButton btnAUTOROUTE = rootView.findViewById(R.id.frgm_1_autoroute_button);
+        final Button btnTEST = rootView.findViewById(R.id.frgm_1_test_button);
+
         btnWAKEUP.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View rootView) {
-                new UdpClient().execute(ipAddr,
-                                        getString(R.string.udp_port),
-                                        getString(R.string.wakeup_command, "1"));
+                new UdpClient().execute(ipAddr, udpPort, getString(R.string.wakeup_command, "1"));
             }
         });
 
-        Button btnSLEEP = rootView.findViewById(R.id.frgm_1_button2);
         btnSLEEP.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View rootView) {
-                new UdpClient().execute(ipAddr,
-                        getString(R.string.udp_port),
-                        getString(R.string.sleep_command, "1"));
+                new UdpClient().execute(ipAddr, udpPort, getString(R.string.sleep_command, "1"));
             }
         });
 
-        Button btnCTRL = rootView.findViewById(R.id.frgm_1_button3);
         btnCTRL.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View rootView) {
-                new UdpClient().execute(ipAddr,
-                        getString(R.string.udp_port),
-                        getString(R.string.control_command, "1"));
+                new UdpClient().execute(ipAddr, udpPort, getString(R.string.control_command, "1"));
+                btnWAKEUP.setEnabled(false);
+                btnSLEEP.setEnabled(false);
+                btnAUTOROUTE.setEnabled(false);
+                btnTEST.setEnabled(false);
+                btnCTRL.setChecked(true);
             }
         });
 
-        Button btnRESET = rootView.findViewById(R.id.frgm_1_button4);
-        btnRESET.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View rootView) {
-                new UdpClient().execute(ipAddr,
-                        getString(R.string.udp_port),
-                        getString(R.string.reset_command, "1"));
-            }
-        });
-
-        Button btnAUTOROUTE = rootView.findViewById(R.id.frgm_1_button5);
         btnAUTOROUTE.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View rootView) {
-                new UdpClient().execute(ipAddr,
-                        getString(R.string.udp_port),
-                        getString(R.string.autoroute_command, "1"));
+                new UdpClient().execute(ipAddr, udpPort, getString(R.string.autoroute_command, "1"));
+                btnWAKEUP.setEnabled(false);
+                btnSLEEP.setEnabled(false);
+                btnCTRL.setEnabled(false);
+                btnTEST.setEnabled(false);
+                btnAUTOROUTE.setChecked(true);
             }
         });
 
-        Button btnTEST = rootView.findViewById(R.id.frgm_1_button6);
+        btnRESET.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View rootView) {
+                new UdpClient().execute(ipAddr, udpPort, getString(R.string.reset_command, "1"));
+                btnWAKEUP.setEnabled(true);
+                btnSLEEP.setEnabled(true);
+                btnCTRL.setEnabled(true);
+                btnAUTOROUTE.setEnabled(true);
+                btnTEST.setEnabled(true);
+                btnCTRL.setChecked(false);
+                btnAUTOROUTE.setChecked(false);
+            }
+        });
+
         btnTEST.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View rootView) {
-                new UdpClient().execute(ipAddr,
-                        getString(R.string.udp_port),
-                        getString(R.string.test_command, "1"));
+                new UdpClient().execute(ipAddr, udpPort, getString(R.string.test_command, "1"));
             }
         });
 
@@ -123,21 +131,16 @@ public class Fragment_1 extends Fragment implements JoystickView.OnJoystickChang
 
         MyViewPager.setPagingEnabled(joystickReleased);
         MainActivity.joystickReleased = joystickReleased;
-        this.joystickReleased = joystickReleased;
 
         text.setText(getString(R.string.x_y_label,
                                String.format(Locale.ENGLISH, "%.2f", xValue),
                                String.format(Locale.ENGLISH, "%.2f", yValue)));
 
-        new UdpClient().execute(ipAddr,
-                getString(R.string.udp_port),
-                getString(R.string.x_axis_command,
-                          String.format(Locale.ENGLISH, "%.2f", xValue)));
+        new UdpClient().execute(ipAddr, udpPort,
+                getString(R.string.x_axis_command, String.format(Locale.ENGLISH, "%.2f", xValue)));
 
-        new UdpClient().execute(ipAddr,
-                getString(R.string.udp_port),
-                getString(R.string.y_axis_command,
-                          String.format(Locale.ENGLISH, "%.2f", yValue)));
+        new UdpClient().execute(ipAddr, udpPort,
+                getString(R.string.y_axis_command, String.format(Locale.ENGLISH, "%.2f", yValue)));
     }
 
     @Override

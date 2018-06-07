@@ -2,12 +2,12 @@
     <string name="app_name">stepan3</string>
     <string name="defaultJoystickValue">x: 0 y: 0</string>
     <string name="preference_video_url">edit_text_preference_1</string>
-    <string name="preference_ip_addr">edit_text_preference_2</string>
+    <string name="preference_udp_socket">edit_text_preference_2</string>
     <string name="default_video_url">http://192.168.194.139:8080/browserfs.html</string>
-    <string name="default_ip_addr">192.168.1.2</string>
+    <string name="default_udp_socket">192.168.1.2:8080</string>
     <string name="x_y_label">x: %1$s, y: %2$s</string>
     <string name="control_url">http://%1$s/?%2$s=%3$s</string>
-    <string name="udp_port">8080</string>
+
     <string name="x_axis_command">{a0=%1$s}</string>
     <string name="y_axis_command">{a1=%1$s}</string>
     <string name="wakeup_command">{b3=%1$s}</string>
@@ -16,4 +16,25 @@
     <string name="reset_command">{b1=%1$s}</string>
     <string name="autoroute_command">{b4=%1$s}</string>
     <string name="test_command">{b6=%1$s}</string>
+    <string name="pos_kp_command">{pos_kp=%1$s}</string>
+    <string name="pos_kd_command">{pos_kd=%1$s}</string>
+    <string name="spd_kp_command">{spd_kp=%1$s}</string>
+    <string name="spd_ki_command">{spd_ki=%1$s}</string>
+    <string name="stb_kp_command">{stb_kp=%1$s}</string>
+    <string name="stb_kd_command">{stb_kd=%1$s}</string>
+
+    <string name="wakeup_button_title">WU</string>
+    <string name="sleep_button_title">SL</string>
+    <string name="control_button_title">CT</string>
+    <string name="reset_button_title">RS</string>
+    <string name="autoroute_button_title">AR</string>
+    <string name="test_button_title">TS</string>
+    <string name="default_button_title">DF</string>
+
+    <string name="pos_kp_bar_title">Position Kp:\u0020\u0020</string>
+    <string name="pos_kd_bar_title">Position Kd:\u0020\u0020</string>
+    <string name="speed_kp_bar_title">Speed Kp:\u0020\u0020</string>
+    <string name="speed_ki_bar_title">Speed Ki:\u0020\u0020</string>
+    <string name="stab_kp_bar_title">Stab Kp:\u0020\u0020</string>
+    <string name="stab_kd_bar_title">Stab Kd:\u0020\u0020</string>
 </resources>

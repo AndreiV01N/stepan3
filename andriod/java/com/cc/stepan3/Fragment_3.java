@@ -18,16 +18,16 @@ public class Fragment_3 extends PreferenceFragmentCompat
         SharedPreferences mSharedPrefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
 
         String defaultVideoURL = getResources().getString(R.string.default_video_url);
-        String defaultIpAddr = getResources().getString(R.string.default_ip_addr);
+        String defaultUDPsocket = getResources().getString(R.string.default_udp_socket);
 
         String VideoURL = mSharedPrefs.getString(getString(R.string.preference_video_url), defaultVideoURL);
-        String ipAddr = mSharedPrefs.getString(getString(R.string.preference_ip_addr), defaultIpAddr);
+        String UDPsocket = mSharedPrefs.getString(getString(R.string.preference_udp_socket), defaultUDPsocket);
 
         Preference prefVideoURL = getPreferenceScreen().findPreference(getString(R.string.preference_video_url));
-        Preference prefIpAddr = getPreferenceScreen().findPreference(getString(R.string.preference_ip_addr));
+        Preference prefUDPsocket = getPreferenceScreen().findPreference(getString(R.string.preference_udp_socket));
 
         prefVideoURL.setSummary(VideoURL);
-        prefIpAddr.setSummary(ipAddr);
+        prefUDPsocket.setSummary(UDPsocket);
     }
 
     @Override
@@ -49,7 +49,7 @@ public class Fragment_3 extends PreferenceFragmentCompat
 
         if (key.equals(getString(R.string.preference_video_url))) {
             _updateSummary((EditTextPreference) pref);
-        } else if (key.equals(getString(R.string.preference_ip_addr))) {
+        } else if (key.equals(getString(R.string.preference_udp_socket))) {
             _updateSummary((EditTextPreference) pref);
         }
     }

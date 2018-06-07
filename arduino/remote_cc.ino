@@ -84,16 +84,16 @@ void apply_remote_cmd()
 			} else if (command == "pos_kd") {
 				Kd_pos = value.toFloat();
 
-			} else if (command == "speed_kp") {
+			} else if (command == "spd_kp") {
 				Kp_speed = value.toFloat();
 
-			} else if (command == "speed_ki") {
+			} else if (command == "spd_ki") {
 				Ki_speed = value.toFloat();
 
-			} else if (command == "stab_kp") {
+			} else if (command == "stb_kp") {
 				Kp_stab = value.toFloat();
 
-			} else if (command == "stab_kd") {
+			} else if (command == "stb_kd") {
 				Kd_stab = value.toFloat();
 			}
 		}
