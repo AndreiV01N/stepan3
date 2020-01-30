@@ -1,139 +1,178 @@
-#define KP_POSITION		0.04
-#define KD_POSITION		0.20
+#define GY_521				0	// available IMU/AHRS boards: GY_521, GY_85, GY_87
+#define GY_85				1
+#define GY_87				0
 
-#define KP_SPEED		0.08
-#define KI_SPEED		0.1
+#define TILT_AXIS_X			1	// or _Y (depends on how the IMU/AHRS board is positioned inside)
 
-#define KP_STAB			0.19
-#define KD_STAB			0.05
+#define DEBUG_IMU			0	// if this is set to 1, one of 4 below should be set to 1 as well
+#define DEBUG_IMU_RAW_DATA		0
+#define DEBUG_IMU_PROCESSING_CUBE	0
+#define DEBUG_IMU_PROCESSING_BUNNY	0
+#define DEBUG_IMU_CALIBRATION		0	// if set to 1 - lock the robot vertically (approx.) and keep it motionless
 
-#define KP_STAB_RISEUP		0.03
-#define KD_STAB_RISEUP		0.08
+#define KP_POSITION			0.08f
+#define KD_POSITION			0.20f
 
-#define MAX_SPEED_TARGET	70
-#define MAX_TARGET_ANGLE	35
-#define MAX_CONTROL_OUTPUT	200
-#define MAX_STEERING		50
+#define KP_SPEED			0.06f
+#define KI_SPEED			0.08f
 
-#define ANGLE_READY		75
-#define MAX_ACCEL_NORM		25
-#define MAX_ACCEL_RISEUP	6
-#define ROUTE_PAUSE		10000	// time between routes in ms (if standalone)
-#define RISEUP_TIMEOUT		1500	// in ms
+#if GY_85
+#define KP_STAB				0.50f
+#define KD_STAB				0.15f
+#else
+#define KP_STAB				0.30f
+#define KD_STAB				0.10f
+#endif
 
-#define COMMAND_CENTER			// comment if standalone
+#define LOOP_NUM_K_SOFT_START		50	// K*_stab are tuned on first N loops to start smoothly when abs(tilt) < TILT_COMFORT
 
+#define MAX_SPEED_TARGET		140
+#define MAX_TILT_TARGET			35
+#define MAX_CONTROL_OUTPUT		700
+
+#define MAX_ACCEL_NORMAL		50
+#define MAX_DECCEL_NORMAL		200
+#define MAX_ACCEL_RISEUP		10
+#define MAX_DECCEL_RISEUP		50	// acts the same way as "ABS" in real vehecles
+
+#define TILT_BIAS			0.0f	// doesn't really matter (helps to prevent onetime short moving drift on start)
+#define TILT_READY			60.0f	// robot's tilt is supposed as VERTICAL (within working sector)
+#define TILT_COMFORT			15.0f	// relates to LOOP_NUM_K_SOFT_START
+#define ROUTE_PAUSE			10000	// time between routes in ms (if standalone)
+#define SLEEP_TIMEOUT			2000	// in ms
+#define RISEUP_TIMEOUT			1000	// in ms
+
+#define BATTERY_PIN			A3	// 10-bit voltage of 6xAA on BATTERY_PIN (Vbatt -> 10kOhm -> BATTERY_PIN -> 3.2kOhm -> GND)
+						// 300 (totally exhausted AAs) ... 450 (new and fresh AAs)
+
+#define MODE				4	// 0 - networkless, standalone
+						// 1 - internal AP, standalone
+						// 2 - internal AP, remote control
+						// 3 - external AP, standalone
+						// 4 - external AP, remote control
+#if MODE == 0
+#define STANDALONE
+#endif
+
+#if MODE == 1
+#define WIFI_INTERNAL_AP
+#define STANDALONE
+#endif
+
+#if MODE == 2
+#define WIFI_INTERNAL_AP
+#define COMMAND_CENTER
+#endif
+
+#if MODE == 3
 #define WIFI_EXTERNAL_AP
-// #define WIFI_INTERNAL_AP
+#define STANDALONE
+#endif
 
+#if MODE == 4
+#define WIFI_EXTERNAL_AP
+#define COMMAND_CENTER
+#endif
 
 #include <util/delay.h>
-#include "dc_motors.h"
-#include "pid.h"
-#include "remote_cc.h"
-#include "route.h"
-#include "wifi.h"
-#include "MPU6050_6Axis_MotionApps20.h"
 
-MPU6050 mpu;
 
-Quaternion q;				// [w, x, y, z]         quaternion container
-VectorFloat gravity;			// [x, y, z]            gravity vector
-float ypr[3];				// [yaw, pitch, roll]   yaw/pitch/roll container and gravity vector
+float axis_x;				// roll by default
+float axis_y;				// pitch by default
+float axis_z;				// yaw by default
 
-double angle_actual;			// near zero if vertical, positive if tilt forward
-double angle_target_raw;
-double angle_target;
+float tilt_now;				// near zero if vertical, positive if tilt forward
+float tilt_target_raw = 0.f;
+float tilt_target = 0.f;
 
-double speed_actual;			// avg. of speed_M1, speed_M2
-double speed_actual_filtered = 0.0;
-double speed_target_raw;
-double speed_target;			// positive if going to go forward
+float speed_now;			// avg(speed_M1, speed_M2)
+float speed_target_raw = 0.f;		// all of speed_* below are in "full steps"/sec (1 wheel rotation eq 200 full steps)
+float speed_target = 0.f;		// e.g. speed_target=200 means 1 wheel rotation per second (approx 0.3 m/s)
 
-double angular_velocity;
-double dt_f;
+float dt_f_ms;
 
-double Kp_speed = KP_SPEED;
-double Ki_speed = KI_SPEED;
+float Kp_pos = KP_POSITION;
+float Kd_pos = KD_POSITION;
 
-double Kp_stab = KP_STAB;
-double Kd_stab = KD_STAB;
+float Kp_speed = KP_SPEED;
+float Ki_speed = KI_SPEED;
 
-double Kp_pos = KP_POSITION;
-double Kd_pos = KD_POSITION;
+float Kp_stab = KP_STAB;
+float Kd_stab = KD_STAB;
 
-double control_output_raw = 0.0;
-double control_output;			// positive when going forward
+float control_output_raw = 0.f;
+float control_output = 0.f;		// positive when going forward
 
-double steering_raw;
-double steering;
+float steering_raw;
+float steering;
 
-double M1_pos_ctl;
-double M2_pos_ctl;
+float M1_pos_ctl;
+float M2_pos_ctl;
+
+float sonar_dist_cm = 0.f;
 
 int32_t step_M1;			// increases when forward
 int32_t step_M2;
-int32_t target_step_M1;			// 1 round = 300 mm = 3200 steps (1/16 microstepping)
+int32_t target_step_M1;			// 1 wheel rotation = 300 mm (3200 steps for 1/16 microstepping or 200 steps for "full stepping")
 int32_t target_step_M2;
-uint32_t dt;
+uint32_t dt_ms;	
 uint32_t now_us;
 uint32_t now_ms;
-uint32_t timer_pid;
-uint32_t timer_riseup;
-uint32_t timer_route;
-uint32_t timer_batt;
+uint32_t timer_pid_us;
+uint32_t timer_loop_ms;
+uint32_t timer_riseup_ms;
+uint32_t timer_route_ms;
+uint32_t timer_sleep_ms;
+uint32_t loop_number = 0;
+uint32_t sonar_delay_us = 0;
 
-int16_t max_accel = MAX_ACCEL_NORM;
+int16_t max_accel = MAX_ACCEL_NORMAL;
+int16_t max_deccel = MAX_DECCEL_NORMAL;
 int16_t control_M1;
 int16_t control_M2;
-int16_t speed_M1;			// Actual speed of M1 (positive when going forward)
-int16_t speed_M2;			// Actual speed of M2 (positive when going forward)
-int16_t mpu_fifo_count = 0;		// bytes currently in FIFO
-uint16_t mpu_packet_size;		// expected DMP packet size (default is 42 bytes)
+int16_t speed_M1;			// actual speed of M1 (positive when going forward)
+int16_t speed_M2;
+uint16_t battery_raw;
 
-int8_t dir_M1;				// Actual direction of M1
-int8_t dir_M2;				// Actual direction of M2
-uint8_t route_point = 0;		// Current route segment
-uint8_t mpu_status;			// (0 = success, !0 = error)
-uint8_t mpu_fifo_buffer[64];		// FIFO storage buffer
+int8_t dir_M1;				// actual direction of M1 (positive when rotates forward, zero if stops)
+int8_t dir_M2;
+uint8_t route_point = 0;		// current route segment (see route.ino)
+uint8_t riseup_phase = 0;
 
-bool mpu_ready = false;
-bool position_up;
-bool on_route = false;
-bool on_riseup = false;
-#if defined(WIFI_EXTERNAL_AP) || defined(WIFI_INTERNAL_AP)
-#ifdef COMMAND_CENTER
-bool on_control = false;
-#endif
+bool is_awake = false;			// 'true' means the robot is not asleep and ready to any activities
+bool position_up = false;		// 'true' means actual 'tilt_now' value < abs(TILT_READY) - i.e. we are UP
+bool on_route = false;			// 'true' means the robot is now following predefined route path
+bool on_riseup = false;			// 'true' means the robot is now trying to reach abs(TILT_READY) from laying position
+bool on_control = false;		// 'true' means robot's movements are now controlled remotely
+bool on_soft_start = false;		// 'true' means Kp_stab and Kd_stab are being corrected
 bool syslog_is_online = false;
 bool node_connected = false;
-#endif
+bool sonar_ready = true;
 
 
-int16_t my_round(double x)
+int16_t my_round(float x)
 {
-	return (int)(x + (x < 0 ? -0.5 : 0.5));
+	return (int)(x + (x < 0 ? -0.5f : 0.5f));
 }
 
 
-void set_ready_to_riseup()
+float get_tilt()
 {
-	Kp_stab = KP_STAB_RISEUP;	// preparing to riseup
-	Kd_stab = KD_STAB_RISEUP;
-	max_accel = MAX_ACCEL_RISEUP;	// 6
-	angle_target = 0;
-	control_output_raw = 0;
-	step_M1 = 0;
-	step_M2 = 0;
-	PORTH &= ~_BV(5);		// enable motors
-	timer_riseup = millis();	// starting to riseup
+#if TILT_AXIS_X
+	return (axis_x - TILT_BIAS);
+#elif TILT_AXIS_Y
+	return (axis_y - TILT_BIAS);
+#endif
 }
 
 
 void setup()
 {
 	Serial.begin(115200);
-	motor_pins_init();
+
+#if DEBUG_IMU
+	imu_init();						// can take a few seconds
+#else
 
 #ifdef WIFI_EXTERNAL_AP
 	Serial3.begin(115200);
@@ -147,7 +186,7 @@ void setup()
 	Serial3.begin(115200);
 	esp8266_init_local_ap();
 
-	while (!syslog_is_online) {					// waiting for syslog server..
+	while (!syslog_is_online) {
 		syslog_is_online = esp8266_check_node();
 		delay(1000);
 	}
@@ -156,228 +195,187 @@ void setup()
 		node_connected = esp8266_ipservices_init();
 #endif
 
-	// MPU6050 init using I2Cdev libs
-	Wire.begin();
-	Wire.setClock(400000);
+	motor_pins_init();
+	sonar_pins_init();
+	delay(100);
+	imu_init();
+	imu_read_data();
+	tilt_now = get_tilt();
 
-	Serial.println(F("Starting MPU6050 init.."));
-	mpu.initialize();
-
-	while (!mpu_ready) {
-		mpu_ready = mpu.testConnection();
-	}
-
-	Serial.println(F("MPU6050 is active"));
-	delay(500);
-	Serial.println(F("Starting MPU6050 DMP init.."));
-	mpu_status = mpu.dmpInitialize();
-
-	if (mpu_status == 0) {
-		Serial.println(F("Enabling MPU6050 DMP.."));
-		mpu.setDMPEnabled(true);
-		mpu_packet_size = mpu.dmpGetFIFOPacketSize();
-	} else {
-		// ERROR!
-		// 1 = initial memory load failed
-		// 2 = DMP configuration updates failed
-		// (if it's going to break, usually the code will be 1)
-		Serial.print(F("DMP Initialization failed. Code: "));
-		Serial.println(mpu_status);
-	}
-	Serial.print(F("MPU6050 DMP is now activated. packetSize: "));
-	Serial.println(mpu_packet_size);
-
-	delay(3000);
-	mpu.resetFIFO();
-
-	// obtaining current angle from MPU6050
-	while (mpu_fifo_count < mpu_packet_size) {		// wait till DMP data is ready
-		mpu_fifo_count = mpu.getFIFOCount();
-	}
-
-	mpu.getFIFOBytes(mpu_fifo_buffer, mpu_packet_size);
-	mpu_fifo_count -= mpu_packet_size;
-
-	mpu.dmpGetQuaternion(&q, mpu_fifo_buffer);
-	mpu.dmpGetGravity(&gravity, &q);
-	mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
-
-	angle_actual = (ypr[2] + 0.0) * RAD_TO_DEG;
-//	angle_Y      = (ypr[1] + 0.0) * RAD_TO_DEG;
-
-	timer_pid = micros();
-
-	if (fabs(angle_actual) < ANGLE_READY) {			// position is UP
+	if (fabs(tilt_now) < TILT_READY) {			// an initial position is UP
 		position_up = true;
-#ifndef COMMAND_CENTER
-		timer_route = millis();
-#endif
-	} else {						// position is DOWN
+		is_awake = true;
+		timer_route_ms = millis();
+		timer_pid_us = micros();
+		timer_loop_ms = millis();
+		if (fabs(tilt_now) < TILT_COMFORT)
+			on_soft_start = true;
+	} else {
 		position_up = false;
-#ifdef COMMAND_CENTER
-		Kp_stab = 0;
-		Kd_stab = 0;
-#else
-		set_ready_to_riseup();
-		on_riseup = true;
-#endif
+		stall();
 	}
+#endif		// not DEBUG_IMU
 }
 
 
 void loop()
 {
+#if DEBUG_IMU
+
+#if !DEBUG_IMU_CALIBRATION					// do nothing in the loop() while calibrating
+	imu_read_data();
+#endif
+
+#else	// not DEBUG_IMU
+
 #ifdef COMMAND_CENTER
 	apply_remote_cmd();
 #endif
 
-	while (mpu_fifo_count < mpu_packet_size) {		// wait for DMP data
-		mpu_fifo_count = mpu.getFIFOCount();
-	}
+	imu_read_data();
+	tilt_now = get_tilt();
 
-	mpu.getFIFOBytes(mpu_fifo_buffer, mpu_packet_size);
-	mpu_fifo_count -= mpu_packet_size;
-
-	if (mpu_fifo_count > 0) {
-		mpu.resetFIFO();
-		mpu_fifo_count = 0;
-	}
-
-	mpu.dmpGetQuaternion(&q, mpu_fifo_buffer);
-	mpu.dmpGetGravity(&gravity, &q);
-	mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
-
-	angle_actual = (ypr[2] + 0.0) * RAD_TO_DEG;
-//	angle_Y      = (ypr[1] + 0.0) * RAD_TO_DEG;
-
-	if (fabs(angle_actual) < ANGLE_READY) {			// we're VERTICAL (within working sector)
-		if (!position_up) {				// we've just got UP, need to set normal params
-			Kp_stab = KP_STAB;
-			Kd_stab = KD_STAB;
-			max_accel = MAX_ACCEL_NORM;
+	if (fabs(tilt_now) < TILT_READY) {			// we are now UP (within tilt working sector)
+		if (position_up) {				// last time we were UP as well
+			if (is_awake) {
+				// this helps a lot to avoid moving twitches on early start being UP
+				if (on_soft_start && loop_number <= LOOP_NUM_K_SOFT_START) {
+					Kp_stab = KP_STAB * loop_number / LOOP_NUM_K_SOFT_START;
+					Kd_stab = KD_STAB * loop_number / LOOP_NUM_K_SOFT_START;
+					if (loop_number == LOOP_NUM_K_SOFT_START)
+						on_soft_start = false;
+				}
+#ifdef STANDALONE
+				if (!on_route) {
+					dt_ms = millis() - timer_route_ms;
+					if (dt_ms > ROUTE_PAUSE) {
+						on_route = true;
+						route_point = 0;
+					}
+				}
+#endif
+			} else {				// received 'Sleep' remote command earlier while being UP
+				set_speed_M1(0);
+				set_speed_M2(0);
+				dt_ms = millis() - timer_sleep_ms;
+				if (dt_ms > SLEEP_TIMEOUT)
+					is_awake = true;
+			}
+		} else {					// we've just got UP, needs to set normal params
 			step_M1 = 0;
 			step_M2 = 0;
 			position_up = true;
+			is_awake = true;
 			on_riseup = false;
-#ifndef COMMAND_CENTER
-			timer_route = millis();
-#endif
-		} else {					// we were VERTICAL before
-#ifndef COMMAND_CENTER
-			if (!on_route) {
-				dt = millis() - timer_route;
-				if (dt > ROUTE_PAUSE) {
-					on_route = true;
-					route_point = 0;
-				}
-			}
-#endif
+			riseup_phase = 0;
+			max_accel = MAX_ACCEL_NORMAL;
+			max_deccel = MAX_DECCEL_NORMAL;
+			timer_route_ms = millis();
+			timer_pid_us = micros() - 10000;	// set pid timer 10ms behind
+			pid_reset_errors();
 		}
-	} else {						// we're HORIZONTAL (out of working sector)
-		on_route = false;
-#ifdef COMMAND_CENTER
-		on_control = false;
-#endif
-		if (position_up) {				// we've just fell down
+	} else {						// we are now DOWN (out of tilt working sector)
+		if (position_up) {				// just fell over for any reasons (last time we were UP)
+			on_route = false;
+			on_control = false;
 			position_up = false;
-			stall();				// motors off, wait for 2s
-#ifdef COMMAND_CENTER
-			Kp_stab = 0;
-			Kd_stab = 0;
-#else
-			set_ready_to_riseup();			// preparing to riseup..
-			on_riseup = true;
-#endif
-		} else  {					// we were DOWN before (we're still out of working sector)
-#ifdef COMMAND_CENTER
-			if (on_riseup && Kp_stab == 0) {
-				set_ready_to_riseup();		// preparing to riseup..
+			on_riseup = false;
+			if (is_awake)				// fell over on its own (it was not a 'Sleep' remote command)
+				stall();
+			else {					// we're already asleep - just keep falling down after receiving 'Sleep' cmd
+				set_speed_M1(0);
+				set_speed_M2(0);
+				dt_ms = millis() - timer_sleep_ms;
+				if (dt_ms > SLEEP_TIMEOUT)
+					is_awake = true;
 			}
+		} else {					// last time we were DOWN too (we're still out of tilt working sector)
+			if (is_awake) {
+				if (on_riseup) {		// here we're keep trying to get UP
+					riseup_control();
+					dt_ms = millis() - timer_riseup_ms;
+					if (dt_ms > RISEUP_TIMEOUT)		// we've not managed to reach tilt working sector in time..
+						stall();
+				}
+			} else {				// in 'sleep' state due to stall() called or it's robot's initial pos
+				set_speed_M1(0);
+				set_speed_M2(0);
+				dt_ms = millis() - timer_sleep_ms;
+				if (dt_ms > SLEEP_TIMEOUT) {
+					is_awake = true;
+#ifdef STANDALONE
+					on_riseup = true;	// auto-riseup if standalone
 #endif
-			if (on_riseup) {
-				dt = millis() - timer_riseup;		// .. here we're still trying to riseup
-				if (dt > RISEUP_TIMEOUT) {		// we have not managed to get ANGLE_READY in time, resetting..
-					position_up = true;		// going to off) & reset, and then another attempt to riseup
 				}
 			}
 		}
 	}
 
-	if (on_route) {
-		follow_route();
-		M1_pos_ctl = position_PD_control(step_M1, target_step_M1, Kp_pos, Kd_pos, speed_M1);
-		M2_pos_ctl = position_PD_control(step_M2, target_step_M2, Kp_pos, Kd_pos, speed_M2);
+	speed_now = float(speed_M1 + speed_M2) / 2.f;
 
-		speed_target_raw = (M1_pos_ctl + M2_pos_ctl) / 2;
-		speed_target     = constrain(speed_target_raw, -MAX_SPEED_TARGET, MAX_SPEED_TARGET);
-	} else {
-#ifdef COMMAND_CENTER
-		if (!on_control)
+	if (position_up && is_awake) {
+		if (on_route) {
+			follow_route();				// updates target_step_M*
+			M1_pos_ctl = position_PD_control(step_M1, target_step_M1, Kp_pos, Kd_pos, speed_M1);
+			M2_pos_ctl = position_PD_control(step_M2, target_step_M2, Kp_pos, Kd_pos, speed_M2);
+
+			speed_target_raw = (M1_pos_ctl + M2_pos_ctl) / 2;
+			speed_target     = constrain(speed_target_raw, -MAX_SPEED_TARGET, MAX_SPEED_TARGET);
+		} else if (!on_control)
 			speed_target = 0;
-#else
-		speed_target = 0;
-#endif
-	}
 
-	now_us = micros();
-	dt_f = (double)(now_us - timer_pid) / 1000000;
-	timer_pid = now_us;
+		now_us = micros();
+		dt_f_ms = (float)(now_us - timer_pid_us) / 1000000.f;
+		timer_pid_us = now_us;
 
-	if (position_up) {
-		speed_actual = (speed_M1 + speed_M2) / 2;
-//		speed_actual_filtered = speed_actual_filtered * 0.9 + speed_actual * 0.1;
-		speed_actual_filtered = speed_actual;
+		tilt_target_raw = speed_PI_control(dt_f_ms, speed_now, speed_target, Kp_speed, Ki_speed);
+		tilt_target     = constrain(tilt_target_raw, -MAX_TILT_TARGET, MAX_TILT_TARGET);		// -35..+35
 
-		angle_target_raw = speed_PI_control(dt_f, speed_actual_filtered, speed_target, Kp_speed, Ki_speed);
-		angle_target     = constrain(angle_target_raw, -MAX_TARGET_ANGLE, MAX_TARGET_ANGLE);
-	}
+		control_output_raw += stability_PD_control(dt_f_ms, tilt_now, tilt_target, Kp_stab, Kd_stab);
+		control_output      = constrain(control_output_raw, -MAX_CONTROL_OUTPUT, MAX_CONTROL_OUTPUT);	// -700..+700
 
-	control_output_raw += stability_PD_control(dt_f, angle_actual, angle_target, Kp_stab, Kd_stab);
-	control_output      = constrain(control_output_raw, -MAX_CONTROL_OUTPUT, MAX_CONTROL_OUTPUT);
-
-	if (on_route) {
-		steering = get_steering();
-	} else {
-#ifdef COMMAND_CENTER
-		if (!on_control)
+		if (on_route)
+			steering = get_steering();
+		else if (!on_control)
 			steering = 0;
-#else
-		steering = 0;
-#endif
+
+		control_M1 = my_round(control_output + steering);
+		control_M2 = my_round(control_output - steering);
+
+		set_speed_M1(control_M1);
+		set_speed_M2(control_M2);
+
+		if (sonar_ready)
+			sonar_send_ping();
 	}
 
-	control_M1 = my_round(control_output + steering);
-	control_M2 = my_round(control_output - steering);
+	battery_raw = analogRead(BATTERY_PIN);
 
-	set_speed_M1(control_M1);
-	set_speed_M2(control_M2);
-
+	loop_number++;
 	now_ms = millis();
+	dt_ms = now_ms - timer_loop_ms;
+	timer_loop_ms = now_ms;
 
-#if defined(WIFI_EXTERNAL_AP) || defined(WIFI_INTERNAL_AP)
-//	Serial3.println();
-//	Serial3.print(F(", step_M1: "));		Serial3.print(step_M1);
-//	Serial3.print(F(", step_M2: "));		Serial3.print(step_M2);
-//	Serial3.print(F(", angle_target_raw: "));	Serial3.print(angle_target_raw);
+#if defined(WIFI_EXTERNAL_AP) || defined(WIFI_INTERNAL_AP)		// sending the telemetry to syslog..
+//	Serial3.print(F(" UPT: "));			Serial3.print(now_ms);
+	Serial3.print(F(" LPN: "));			Serial3.print(loop_number);
+	Serial3.print(F(" LPT: "));			Serial3.print(dt_ms);
+//	Serial3.print(F(" BATT: "));			Serial3.print(battery_raw);
+	Serial3.print(F(" SPD: "));			Serial3.print(speed_now);
+	Serial3.print(F(" SPDt: "));			Serial3.print(speed_target);
+	Serial3.print(F(" TLT: "));			Serial3.print(tilt_now);
+	Serial3.print(F(" TLTt: "));			Serial3.print(tilt_target);
+	Serial3.print(F(" COUT: "));			Serial3.println(control_output);
+//	Serial3.print(F(" DST: "));			Serial3.print(sonar_dist_cm);
+//	Serial3.print(F(" YAW: "));			Serial3.println(axis_z);
 
-	Serial3.print(F("UPT: "));			Serial3.print(now_ms);
-	Serial3.print(F("|FIFO: "));			Serial3.print(mpu_fifo_count);
-	Serial3.print(F("|ATR: "));			Serial3.print(angle_target_raw);
-	Serial3.print(F("|A: "));			Serial3.print(angle_actual);
-//	Serial3.print(F("|PUP: "));			Serial3.print(position_up);
-//	Serial3.print(F(", on_riseup: "));		Serial3.print(on_riseup);
-//	Serial3.print(F(", on_route: "));		Serial3.print(on_route);
-	Serial3.print(F("|ONCT: "));			Serial3.print(on_control);
-	Serial3.print(F("|STR: "));			Serial3.print(speed_target_raw);
-	Serial3.print(F("|COR: "));			Serial3.print(control_output_raw);
-	Serial3.print(F("|STR: "));			Serial3.println(steering);
-
-//	Serial3.print(F("|dir_M1: "));			Serial3.print(dir_M1);
-//	Serial3.print(F("|dir_M2: "));			Serial3.print(dir_M2);
-//	Serial3.print(F("|M1_p_ct: "));			Serial3.print(M1_pos_ctl);
-//	Serial3.print(F("|M2_p_ct: "));			Serial3.print(M2_pos_ctl);
-//	Serial3.print(F(" sp_M1: "));			Serial3.print(speed_M1);
-//	Serial3.print(F(" sp_M2: "));			Serial3.print(speed_M2);
-
+//	Serial3.print(F(" STP_M1: "));			Serial3.print(step_M1);
+//	Serial3.print(F(" STP_M2: "));			Serial3.print(step_M2);
+//	Serial3.print(F(" M1_p_ct: "));			Serial3.print(M1_pos_ctl);
+//	Serial3.print(F(" M2_p_ct: "));			Serial3.print(M2_pos_ctl);
+//	Serial3.print(F(" SPD_M1: "));			Serial3.print(speed_M1);
+//	Serial3.print(F(" SPD_M2: "));			Serial3.print(speed_M2);
 #endif
+
+#endif	// not DEBUG_IMU
 }

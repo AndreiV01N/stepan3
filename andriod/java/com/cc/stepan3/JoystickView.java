@@ -31,8 +31,8 @@ public class JoystickView extends View {
     private int buttonColor = buttonGray;
     private int actionCounter = 0;
 
-    private float x, y; // These are in the intern coordinates
-    private double lastX, lastY; // These are in the external coordinates
+    private float x, y;
+    private double lastX, lastY;
     private float buttonRadius;
     private float joystickRadius = 0;
     private float centerX;
@@ -61,8 +61,7 @@ public class JoystickView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         if (joystickRadius == 0) {
-//            joystickRadius = (float) getWidth() / 3;
-            joystickRadius = 66;
+            joystickRadius = (float) getWidth() / 3;
             buttonRadius = joystickRadius / 2;
             centerX = (float) getWidth() - joystickRadius - buttonRadius;
             centerY = (float) getHeight() - joystickRadius - buttonRadius;

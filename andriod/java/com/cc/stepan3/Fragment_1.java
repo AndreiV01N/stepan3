@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,6 +14,10 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
+import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.util.Locale;
 
 
@@ -21,7 +26,6 @@ public class Fragment_1 extends Fragment implements JoystickView.OnJoystickChang
     private SharedPreferences mSharedPrefs;
     private String ipAddr;
     private String udpPort;
-
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -33,7 +37,7 @@ public class Fragment_1 extends Fragment implements JoystickView.OnJoystickChang
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_1, container, false);
 
-        WebView mWebView = rootView.findViewById(R.id.frgm_1_webview);
+//        WebView mWebView = rootView.findViewById(R.id.frgm_1_webview);
 
         JoystickView mJoystickView = rootView.findViewById(R.id.frgm_1_joystick);
         mJoystickView.setOnJoystickChangeListener(this);
@@ -42,18 +46,17 @@ public class Fragment_1 extends Fragment implements JoystickView.OnJoystickChang
         text = rootView.findViewById(R.id.frgm_1_text);
         text.setText(R.string.defaultJoystickValue);
 
-        String defaultVideoURL = getResources().getString(R.string.default_video_url);
-        String videoURL = mSharedPrefs.getString(getString(R.string.preference_video_url), defaultVideoURL);
+//        String defaultVideoURL = getResources().getString(R.string.default_video_url);
+//        String videoURL = mSharedPrefs.getString(getString(R.string.preference_video_url), defaultVideoURL);
 
         String defaultUDPsocket = getResources().getString(R.string.default_udp_socket);
         String udpSocket = mSharedPrefs.getString(getString(R.string.preference_udp_socket), defaultUDPsocket);
         ipAddr = udpSocket.split(":")[0];
         udpPort = udpSocket.split(":")[1];
 
-        mWebView.getSettings().setJavaScriptEnabled(true);
-        mWebView.loadUrl(videoURL);
+//        mWebView.getSettings().setJavaScriptEnabled(true);
+//        mWebView.loadUrl(videoURL);
 
-        /* --- BUTTONS --- */
         final Button btnWAKEUP = rootView.findViewById(R.id.frgm_1_wakeup_button);
         final Button btnSLEEP = rootView.findViewById(R.id.frgm_1_sleep_button);
 

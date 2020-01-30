@@ -1,46 +1,69 @@
-#define SPEED_ITERM_MAX_ERROR	30
-#define SPEED_ITERM_MAX		10000
-#define STAB_DELTA_ERROR_MAX	8
-#define POSITION_PTERM_MAX	115
+#define POSITION_PTERM_MAX	40.0f
+#define SPEED_ERROR_MAX		30.0f
+#define SPEED_ITERM_MAX		10000.0f
+#define STAB_DELTA_ERROR_MAX	8.0f
 
-static double speed_i_error = 0;
-static double setpoint_last = 0;
-static double input_last = 0;
+static float speed_i_error = 0.f;
+static float angle_error_last = 0.f;
 
-
-double position_PD_control(int32_t input, int32_t setpoint, double Kp, double Kd, int16_t speedM)
+/*
+ Input: step error
+ Output: speed_target
+*/
+float position_PD_control(int32_t input, int32_t setpoint, float Kp, float Kd, int16_t speedM)
 {
-	double error = setpoint - input;								// target_step_Mx - step_Mx
-	double pTerm = constrain(Kp * error, -POSITION_PTERM_MAX, POSITION_PTERM_MAX);
-	double dTerm = Kd * double(speedM);
+	float position_error = setpoint - input;
+	float pTerm = constrain(Kp * position_error, -POSITION_PTERM_MAX, POSITION_PTERM_MAX);
 
-	return pTerm + dTerm;										// speed_target_raw
+	float dTerm = Kd * float(speedM);
+
+	return pTerm + dTerm;
+}
+
+/*
+ Input: speed error
+ Output: tilt_target
+*/
+float speed_PI_control(float dt, float input, float setpoint, float Kp, float Ki)
+{
+	float speed_error = setpoint - input;
+	float pTerm = Kp * speed_error;
+
+	speed_i_error += constrain(speed_error, -SPEED_ERROR_MAX, SPEED_ERROR_MAX);
+	speed_i_error  = constrain(speed_i_error, -SPEED_ITERM_MAX, SPEED_ITERM_MAX);
+	float iTerm = Ki * speed_i_error * dt;
+
+#if defined(WIFI_EXTERNAL_AP) || defined(WIFI_INTERNAL_AP)
+	Serial3.print(F(" spP: "));	Serial3.print(pTerm);
+	Serial3.print(F(" spI: "));	Serial3.print(iTerm);
+#endif
+	return pTerm + iTerm;
+}
+
+/*
+ Input: tilt_error
+ Output: delta of control_output
+*/
+float stability_PD_control(float dt, float input, float setpoint, float Kp, float Kd)
+{
+	float angle_error = input - setpoint;
+	float pTerm = Kp * angle_error;
+
+	float angle_error_delta = constrain(angle_error - angle_error_last, -STAB_DELTA_ERROR_MAX, STAB_DELTA_ERROR_MAX);
+	float dTerm = Kd * angle_error_delta / dt;
+	angle_error_last = angle_error;
+
+#if defined(WIFI_EXTERNAL_AP) || defined(WIFI_INTERNAL_AP)
+	Serial3.print(F(" coP: "));	Serial3.print(pTerm);
+	Serial3.print(F(" coD: "));	Serial3.print(dTerm);
+#endif
+	return pTerm + dTerm;
 }
 
 
-double speed_PI_control(double dt, double input, double setpoint, double Kp, double Ki)
+void pid_reset_errors()
 {
-	double speed_error = input - setpoint;								// speed_actual - speed_target
-	double pTerm = Kp * speed_error;
-
-	speed_i_error += constrain(speed_error, -SPEED_ITERM_MAX_ERROR, SPEED_ITERM_MAX_ERROR);		// -30...+30
-	speed_i_error  = constrain(speed_i_error, -SPEED_ITERM_MAX, SPEED_ITERM_MAX);			// -10000...+10000
-	double iTerm = Ki * speed_i_error * dt;
-
-	return -(pTerm + iTerm);									// angle_target_raw
-}
-
-
-double stability_PD_control(double dt, double input, double setpoint, double Kp, double Kd)
-{
-	double angle_error = input - setpoint;								// angle_actual - angle_target
-	double pTerm = Kp * angle_error;
-
-	double Kd_setpoint = constrain((setpoint - setpoint_last), -STAB_DELTA_ERROR_MAX, STAB_DELTA_ERROR_MAX);
-	double dTerm1 = Kd * Kd_setpoint;
-	double dTerm2 = Kd * (input - input_last);
-	input_last = input;
-	setpoint_last = setpoint;
-
-	return pTerm + (dTerm2 - dTerm1) / dt;								// control_output
+	speed_i_error = 0.f;
+	angle_error_last = 0.f;
+	return;
 }

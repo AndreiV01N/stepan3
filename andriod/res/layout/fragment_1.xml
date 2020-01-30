@@ -1,106 +1,100 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/controlLayout"
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.constraint.ConstraintLayout
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="match_parent"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <android.support.constraint.ConstraintLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_toStartOf="@id/frgm_1_text">
-
-        <WebView
-            android:id="@+id/frgm_1_webview"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_alignParentStart="true"
-            android:layout_marginTop="6dp"
-            android:layout_marginBottom="6dp"
-            android:layout_marginStart="6dp"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintDimensionRatio="16:9"
-            app:layout_constraintVertical_bias="0.0" />
-
-    </android.support.constraint.ConstraintLayout>
+    <WebView
+        android:id="@+id/frgm_1_webview"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="6dp"
+        android:layout_marginBottom="6dp"
+        android:layout_marginStart="6dp"
+        android:layout_marginEnd="6dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/frgm_1_joystick"
+        app:layout_constraintDimensionRatio="16:9"
+        app:layout_constraintVertical_bias="0.0" />
 
     <Button
         android:id="@+id/frgm_1_sleep_button"
         android:layout_width="48dp"
         android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentEnd="true"
         android:layout_marginEnd="4dp"
-        android:text="@string/sleep_button_title" />
+        android:text="@string/sleep_button_title"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
 
     <Button
         android:id="@+id/frgm_1_wakeup_button"
         android:layout_width="48dp"
         android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_toStartOf="@+id/frgm_1_sleep_button"
-        android:text="@string/wakeup_button_title" />
+        android:text="@string/wakeup_button_title"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/frgm_1_sleep_button"/>
 
     <Button
         android:id="@+id/frgm_1_reset_button"
         android:layout_width="48dp"
         android:layout_height="wrap_content"
-        android:layout_below="@id/frgm_1_sleep_button"
-        android:layout_alignParentEnd="true"
         android:layout_marginEnd="4dp"
-        android:text="@string/reset_button_title" />
+        android:text="@string/reset_button_title"
+        app:layout_constraintTop_toBottomOf="@id/frgm_1_sleep_button"
+        app:layout_constraintEnd_toEndOf="parent"/>
 
     <ToggleButton
         android:id="@+id/frgm_1_control_button"
         android:layout_width="48dp"
         android:layout_height="wrap_content"
-        android:layout_below="@id/frgm_1_wakeup_button"
-        android:layout_toStartOf="@+id/frgm_1_reset_button"
         android:checked="false"
         android:text="@string/control_button_title"
         android:textOn="@string/control_button_title"
-        android:textOff="@string/control_button_title" />
+        android:textOff="@string/control_button_title"
+        app:layout_constraintTop_toBottomOf="@id/frgm_1_wakeup_button"
+        app:layout_constraintEnd_toStartOf="@id/frgm_1_reset_button"/>
 
     <Button
         android:id="@+id/frgm_1_test_button"
         android:layout_width="48dp"
         android:layout_height="wrap_content"
-        android:layout_below="@id/frgm_1_reset_button"
-        android:layout_alignParentEnd="true"
         android:layout_marginEnd="4dp"
-        android:text="@string/test_button_title" />
+        android:text="@string/test_button_title"
+        app:layout_constraintTop_toBottomOf="@id/frgm_1_reset_button"
+        app:layout_constraintEnd_toEndOf="parent"/>
 
     <ToggleButton
         android:id="@+id/frgm_1_autoroute_button"
         android:layout_width="48dp"
         android:layout_height="wrap_content"
-        android:layout_below="@id/frgm_1_control_button"
-        android:layout_toStartOf="@+id/frgm_1_test_button"
         android:checked="false"
         android:text="@string/autoroute_button_title"
         android:textOn="@string/autoroute_button_title"
-        android:textOff="@string/autoroute_button_title" />
+        android:textOff="@string/autoroute_button_title"
+        app:layout_constraintTop_toBottomOf="@id/frgm_1_control_button"
+        app:layout_constraintEnd_toStartOf="@id/frgm_1_test_button"/>
 
     <TextView
         android:id="@+id/frgm_1_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentEnd="true"
-        android:layout_below="@id/frgm_1_test_button"
         android:layout_margin="3dp"
         android:ellipsize="end"
         android:maxLines="1"
-        android:textSize="12sp"/>
+        android:textSize="12sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/frgm_1_test_button"/>
 
     <com.cc.stepan3.JoystickView
         android:id="@+id/frgm_1_joystick"
         android:layout_width="100dp"
         android:layout_height="100dp"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentEnd="true"
-        android:layout_marginBottom="8dp" />
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
-</RelativeLayout>
+</android.support.constraint.ConstraintLayout>

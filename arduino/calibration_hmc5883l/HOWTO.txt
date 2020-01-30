@@ -1,0 +1,25 @@
+1. Select needed IMU board, set DEBUG_IMU and DEBUG_IMU_RAW_DATA to 1, recompile and upload the FW.
+
+2. Open "Serial Monitor" in Arduino IDE
+
+3. Rotate the device manually in various directions to accumulate all IMU spatial positions as many as possible.
+   The more random data you'll get the better.
+
+4. Copy all the Serial Monitor output into serial_out.log file.
+
+5. Extract raw magnetometer data (X, Y, Z) from serial_out.log to .csv file:
+cat ./serial_out.log | grep -E "^Raw" | awk '{print $8","$9","$10}' >./mag_raw.csv
+
+6. Plot the data and check out how it looks
+./plot_raw.m
+
+7. Find and remove all odd "dots" dropped out of the "sphere" surface if any:
+cat ./mag_raw.csv | sort -t "," -k 1 -g | less
+cat ./mag_raw.csv | sort -t "," -k 2 -g | less
+cat ./mag_raw.csv | sort -t "," -k 3 -g | less
+
+8. Copy hard iron offsets into code (an appropriate 'imu_*.ino' file):
+cat ./mag_raw.cvs | ./cal_hard_iron.py >./mag_hard.csv
+
+9. Copy soft iron offsets into code (same 'imu_*.ino' file):
+cat ./mag_hard.csv | ./cal_soft_iron.py >./mag_soft.csv

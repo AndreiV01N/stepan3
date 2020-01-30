@@ -21,28 +21,30 @@ public class Fragment_2 extends Fragment {
     private String ipAddr;
     private String udpPort;
 /*
-    Position Kp:   |0.04|   .. 0.10      max=20 divider=200
-    Position Kd:   |0.20|   .. 0.40      max=20 divider=50
-
-    Speed Kp:      |0.08|   .. 0.2       max=20 divider=100
-    Speed Ki:      |0.10|   .. 0.2       max=20 divider=100
-
-    Stability Kp:  |0.20|   .. 0.40      max=20 divider=50
-    Stability Kd:  |0.05|   .. 0.10      max=20 divider=200
+    Position Kp:   |0.08|   .. 0.2       max=20 divider=100
+    Position Kd:   |0.20|   .. 0.4       max=20 divider=50
+    Speed Kp:      |0.06|   .. 0.08      max=20 divider=250
+    Speed Ki:      |0.00|   .. 0.1       max=20 divider=200
+    Stability Kp:  |0.30|   .. 1.0       max=20 divider=20
+    Stability Kd:  |0.10|   .. 0.5       max=20 divider=40
 */
-    int Pos_Kp_default_progress = 8;
-    int Pos_Kd_default_progress = 10;
-    int Spd_Kp_default_progress = 8;
-    int Spd_Ki_default_progress = 10;
-    int Stb_Kp_default_progress = 10;
-    int Stb_Kd_default_progress = 10;
+    int Pos_Kp_default_progress = 8;        // 0.08
+    int Pos_Kd_default_progress = 10;       // 0.2
 
-    int Pos_Kp_divider = 200;
+    int Spd_Kp_default_progress = 15;       // 0.06
+    int Spd_Ki_default_progress = 16;       // 0.08
+
+    int Stb_Kp_default_progress = 6;        // 0.3
+    int Stb_Kd_default_progress = 4;        // 0.1
+
+    int Pos_Kp_divider = 100;
     int Pos_Kd_divider = 50;
-    int Spd_Kp_divider = 100;
-    int Spd_Ki_divider = 100;
-    int Stb_Kp_divider = 50;
-    int Stb_Kd_divider = 200;
+
+    int Spd_Kp_divider = 250;
+    int Spd_Ki_divider = 200;
+
+    int Stb_Kp_divider = 20;
+    int Stb_Kd_divider = 40;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -58,8 +60,6 @@ public class Fragment_2 extends Fragment {
         String udpSocket = mSharedPrefs.getString(getString(R.string.preference_udp_socket), defaultUDPsocket);
         ipAddr = udpSocket.split(":")[0];
         udpPort = udpSocket.split(":")[1];
-//        Log.d("DEBUG_IP", ipAddr);
-//        Log.d("DEBUG_UDP", udpPort);
 
         final TextView Pos_Kp_txt_val = rootView.findViewById(R.id.frgm_2_pos_kp_text_val);
         final TextView Pos_Kd_txt_val = rootView.findViewById(R.id.frgm_2_pos_kd_text_val);
