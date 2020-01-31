@@ -5,7 +5,6 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
-// import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,31 +19,43 @@ public class Fragment_2 extends Fragment {
     private SharedPreferences mSharedPrefs;
     private String ipAddr;
     private String udpPort;
-/*
-    Position Kp:   |0.08|   .. 0.2       max=20 divider=100
-    Position Kd:   |0.20|   .. 0.4       max=20 divider=50
-    Speed Kp:      |0.06|   .. 0.08      max=20 divider=250
-    Speed Ki:      |0.00|   .. 0.1       max=20 divider=200
-    Stability Kp:  |0.30|   .. 1.0       max=20 divider=20
-    Stability Kd:  |0.10|   .. 0.5       max=20 divider=40
-*/
-    int Pos_Kp_default_progress = 8;        // 0.08
-    int Pos_Kd_default_progress = 10;       // 0.2
 
-    int Spd_Kp_default_progress = 15;       // 0.06
-    int Spd_Ki_default_progress = 16;       // 0.08
+    private float bar_discrete = 20.0f;
 
-    int Stb_Kp_default_progress = 6;        // 0.3
-    int Stb_Kd_default_progress = 4;        // 0.1
+    private float Pos_Kp_default = 0.08f;
+    private float Pos_Kd_default = 0.20f;
+    private float Spd_Kp_default = 0.06f;
+    private float Spd_Ki_default = 0.08f;
+    private float Stb_Kp_default = 0.30f;
+    private float Stb_Kd_default = 0.10f;
 
-    int Pos_Kp_divider = 100;
-    int Pos_Kd_divider = 50;
+    float Pos_Kp_divider_f = bar_discrete / (Pos_Kp_default * 2.0f);
+    float Pos_Kd_divider_f = bar_discrete / (Pos_Kd_default * 2.0f);
+    float Spd_Kp_divider_f = bar_discrete / (Spd_Kp_default * 2.0f);
+    float Spd_Ki_divider_f = bar_discrete / (Spd_Ki_default * 2.0f);
+    float Stb_Kp_divider_f = bar_discrete / (Stb_Kp_default * 2.0f);
+    float Stb_Kd_divider_f = bar_discrete / (Stb_Kd_default * 2.0f);
 
-    int Spd_Kp_divider = 250;
-    int Spd_Ki_divider = 200;
+    int Pos_Kp_dec_base = (int)Math.pow(10, (int)(Math.log10(Pos_Kp_divider_f)));
+    int Pos_Kd_dec_base = (int)Math.pow(10, (int)(Math.log10(Pos_Kd_divider_f)));
+    int Spd_Kp_dec_base = (int)Math.pow(10, (int)(Math.log10(Spd_Kp_divider_f)));
+    int Spd_Ki_dec_base = (int)Math.pow(10, (int)(Math.log10(Spd_Ki_divider_f)));
+    int Stb_Kp_dec_base = (int)Math.pow(10, (int)(Math.log10(Stb_Kp_divider_f)));
+    int Stb_Kd_dec_base = (int)Math.pow(10, (int)(Math.log10(Stb_Kd_divider_f)));
 
-    int Stb_Kp_divider = 20;
-    int Stb_Kd_divider = 40;
+    int Pos_Kp_divider = Pos_Kp_dec_base * round_to_good_number((int)Math.floor(Pos_Kp_divider_f / Pos_Kp_dec_base));
+    int Pos_Kd_divider = Pos_Kd_dec_base * round_to_good_number((int)Math.floor(Pos_Kd_divider_f / Pos_Kd_dec_base));
+    int Spd_Kp_divider = Spd_Kp_dec_base * round_to_good_number((int)Math.floor(Spd_Kp_divider_f / Spd_Kp_dec_base));
+    int Spd_Ki_divider = Spd_Ki_dec_base * round_to_good_number((int)Math.floor(Spd_Ki_divider_f / Spd_Ki_dec_base));
+    int Stb_Kp_divider = Stb_Kp_dec_base * round_to_good_number((int)Math.floor(Stb_Kp_divider_f / Stb_Kp_dec_base));
+    int Stb_Kd_divider = Stb_Kd_dec_base * round_to_good_number((int)Math.floor(Stb_Kd_divider_f / Stb_Kd_dec_base));
+
+    int Pos_Kp_default_progress = (int)(Pos_Kp_default * Pos_Kp_divider);
+    int Pos_Kd_default_progress = (int)(Pos_Kd_default * Pos_Kd_divider);
+    int Spd_Kp_default_progress = (int)(Spd_Kp_default * Spd_Kp_divider);
+    int Spd_Ki_default_progress = (int)(Spd_Ki_default * Spd_Ki_divider);
+    int Stb_Kp_default_progress = (int)(Stb_Kp_default * Stb_Kp_divider);
+    int Stb_Kd_default_progress = (int)(Stb_Kd_default * Stb_Kd_divider);
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -211,5 +222,12 @@ public class Fragment_2 extends Fragment {
         String current_value = String.format(Locale.ENGLISH, "%.3f", (float) progress / divider);
         txt_val.setText(current_value);
         new UdpClient().execute(ipAddr, udpPort, getString(resId, current_value));
+    }
+
+    private int round_to_good_number(int num) {
+        if (num == 3) return 4;
+        if (num == 6 || num == 7) return 5;
+        if (num == 8 || num == 9) return 10;
+        return num;
     }
 }

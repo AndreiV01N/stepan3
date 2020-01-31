@@ -16,11 +16,11 @@
     <string name="reset_command">{b1=%1$s}</string>
     <string name="autoroute_command">{b4=%1$s}</string>
     <string name="test_command">{b6=%1$s}</string>
+
     <string name="pos_kp_command">{pos_kp=%1$s}</string>
     <string name="pos_kd_command">{pos_kd=%1$s}</string>
     <string name="spd_kp_command">{spd_kp=%1$s}</string>
     <string name="spd_ki_command">{spd_ki=%1$s}</string>
-    <string name="spd_kd_command">{spd_kd=%1$s}</string>
     <string name="stb_kp_command">{stb_kp=%1$s}</string>
     <string name="stb_kd_command">{stb_kd=%1$s}</string>
 
@@ -36,7 +36,6 @@
     <string name="pos_kd_bar_title">Position Kd:\u0020\u0020</string>
     <string name="speed_kp_bar_title">Speed Kp:\u0020\u0020</string>
     <string name="speed_ki_bar_title">Speed Ki:\u0020\u0020</string>
-    <string name="speed_kd_bar_title">Speed Kd:\u0020\u0020</string>
     <string name="stab_kp_bar_title">Stab Kp:\u0020\u0020</string>
     <string name="stab_kd_bar_title">Stab Kd:\u0020\u0020</string>
 </resources>
