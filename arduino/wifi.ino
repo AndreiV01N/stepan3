@@ -19,7 +19,7 @@ Dec  2 2016 14:21:16
 #define EXT_AP_SSID		"SPOTTY"
 #define EXT_AP_PASSWORD		"passwd0123"
 
-#define SYSLOG_SERVER		"10.5.0.10"			// for ext AP
+#define SYSLOG_SERVER		"10.5.0.11"			// for ext AP
 
 static String AP_MAC;						// for local AP
 static String MY_IP;
@@ -53,7 +53,8 @@ void esp8266_connect_to_ext_ap()
 	esp8266_send_cmd("AT+CWJAP_CUR?", "OK", 2);		// AP details
 	Serial3.println("AT+CIPSTA_CUR?");			// prints my IP/mask/GW
 	esp8266_parse_ip_addr();
-	Serial.print(F("My ip-addr: ")); Serial.println(MY_IP);
+	Serial.print(F("My ip-addr: "));
+	Serial.println(MY_IP);
 	delay(200);
 	SYSLOG_IP = SYSLOG_SERVER;
 }
@@ -206,6 +207,7 @@ bool esp8266_ipservices_init()
 	strcat(cmd, "\",514");
 	strcat(cmd, ",8080");
 	strcat(cmd, ",0");
+
 	esp8266_send_cmd(cmd, "OK", 3);
 	esp8266_send_cmd("AT+CIPSEND", ">", 2);
 

@@ -29,26 +29,26 @@ public class Fragment_2 extends Fragment {
     private float Stb_Kp_default = 0.30f;
     private float Stb_Kd_default = 0.10f;
 
-    float Pos_Kp_divider_f = bar_discrete / (Pos_Kp_default * 2.0f);
-    float Pos_Kd_divider_f = bar_discrete / (Pos_Kd_default * 2.0f);
-    float Spd_Kp_divider_f = bar_discrete / (Spd_Kp_default * 2.0f);
-    float Spd_Ki_divider_f = bar_discrete / (Spd_Ki_default * 2.0f);
-    float Stb_Kp_divider_f = bar_discrete / (Stb_Kp_default * 2.0f);
-    float Stb_Kd_divider_f = bar_discrete / (Stb_Kd_default * 2.0f);
+    private float Pos_Kp_divider_f = bar_discrete / (Pos_Kp_default * 2.0f);
+    private float Pos_Kd_divider_f = bar_discrete / (Pos_Kd_default * 2.0f);
+    private float Spd_Kp_divider_f = bar_discrete / (Spd_Kp_default * 2.0f);
+    private float Spd_Ki_divider_f = bar_discrete / (Spd_Ki_default * 2.0f);
+    private float Stb_Kp_divider_f = bar_discrete / (Stb_Kp_default * 2.0f);
+    private float Stb_Kd_divider_f = bar_discrete / (Stb_Kd_default * 2.0f);
 
-    int Pos_Kp_dec_base = (int)Math.pow(10, (int)(Math.log10(Pos_Kp_divider_f)));
-    int Pos_Kd_dec_base = (int)Math.pow(10, (int)(Math.log10(Pos_Kd_divider_f)));
-    int Spd_Kp_dec_base = (int)Math.pow(10, (int)(Math.log10(Spd_Kp_divider_f)));
-    int Spd_Ki_dec_base = (int)Math.pow(10, (int)(Math.log10(Spd_Ki_divider_f)));
-    int Stb_Kp_dec_base = (int)Math.pow(10, (int)(Math.log10(Stb_Kp_divider_f)));
-    int Stb_Kd_dec_base = (int)Math.pow(10, (int)(Math.log10(Stb_Kd_divider_f)));
+    private int Pos_Kp_dec_base = (int)Math.pow(10, (int)(Math.log10(Pos_Kp_divider_f)));
+    private int Pos_Kd_dec_base = (int)Math.pow(10, (int)(Math.log10(Pos_Kd_divider_f)));
+    private int Spd_Kp_dec_base = (int)Math.pow(10, (int)(Math.log10(Spd_Kp_divider_f)));
+    private int Spd_Ki_dec_base = (int)Math.pow(10, (int)(Math.log10(Spd_Ki_divider_f)));
+    private int Stb_Kp_dec_base = (int)Math.pow(10, (int)(Math.log10(Stb_Kp_divider_f)));
+    private int Stb_Kd_dec_base = (int)Math.pow(10, (int)(Math.log10(Stb_Kd_divider_f)));
 
-    int Pos_Kp_divider = Pos_Kp_dec_base * round_to_good_number((int)Math.floor(Pos_Kp_divider_f / Pos_Kp_dec_base));
-    int Pos_Kd_divider = Pos_Kd_dec_base * round_to_good_number((int)Math.floor(Pos_Kd_divider_f / Pos_Kd_dec_base));
-    int Spd_Kp_divider = Spd_Kp_dec_base * round_to_good_number((int)Math.floor(Spd_Kp_divider_f / Spd_Kp_dec_base));
-    int Spd_Ki_divider = Spd_Ki_dec_base * round_to_good_number((int)Math.floor(Spd_Ki_divider_f / Spd_Ki_dec_base));
-    int Stb_Kp_divider = Stb_Kp_dec_base * round_to_good_number((int)Math.floor(Stb_Kp_divider_f / Stb_Kp_dec_base));
-    int Stb_Kd_divider = Stb_Kd_dec_base * round_to_good_number((int)Math.floor(Stb_Kd_divider_f / Stb_Kd_dec_base));
+    private int Pos_Kp_divider = Pos_Kp_dec_base * round_to_good_number((int)Math.floor(Pos_Kp_divider_f / Pos_Kp_dec_base));
+    private int Pos_Kd_divider = Pos_Kd_dec_base * round_to_good_number((int)Math.floor(Pos_Kd_divider_f / Pos_Kd_dec_base));
+    private int Spd_Kp_divider = Spd_Kp_dec_base * round_to_good_number((int)Math.floor(Spd_Kp_divider_f / Spd_Kp_dec_base));
+    private int Spd_Ki_divider = Spd_Ki_dec_base * round_to_good_number((int)Math.floor(Spd_Ki_divider_f / Spd_Ki_dec_base));
+    private int Stb_Kp_divider = Stb_Kp_dec_base * round_to_good_number((int)Math.floor(Stb_Kp_divider_f / Stb_Kp_dec_base));
+    private int Stb_Kd_divider = Stb_Kd_dec_base * round_to_good_number((int)Math.floor(Stb_Kd_divider_f / Stb_Kd_dec_base));
 
     int Pos_Kp_default_progress = (int)(Pos_Kp_default * Pos_Kp_divider);
     int Pos_Kd_default_progress = (int)(Pos_Kd_default * Pos_Kd_divider);

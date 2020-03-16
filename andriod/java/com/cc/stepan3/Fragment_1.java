@@ -37,24 +37,26 @@ public class Fragment_1 extends Fragment implements JoystickView.OnJoystickChang
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_1, container, false);
 
-//        WebView mWebView = rootView.findViewById(R.id.frgm_1_webview);
+        WebView mWebView = rootView.findViewById(R.id.frgm_1_webview);
 
-        JoystickView mJoystickView = rootView.findViewById(R.id.frgm_1_joystick);
+        final JoystickView mJoystickView = rootView.findViewById(R.id.frgm_1_joystick);
         mJoystickView.setOnJoystickChangeListener(this);
         MainActivity.joystickReleased = true;
+        mJoystickView.setVisibility(View.INVISIBLE);
 
         text = rootView.findViewById(R.id.frgm_1_text);
         text.setText(R.string.defaultJoystickValue);
+        text.setVisibility(View.INVISIBLE);
 
-//        String defaultVideoURL = getResources().getString(R.string.default_video_url);
-//        String videoURL = mSharedPrefs.getString(getString(R.string.preference_video_url), defaultVideoURL);
+        String defaultVideoURL = getResources().getString(R.string.default_video_url);
+        String videoURL = mSharedPrefs.getString(getString(R.string.preference_video_url), defaultVideoURL);
 
         String defaultUDPsocket = getResources().getString(R.string.default_udp_socket);
         String udpSocket = mSharedPrefs.getString(getString(R.string.preference_udp_socket), defaultUDPsocket);
         ipAddr = udpSocket.split(":")[0];
         udpPort = udpSocket.split(":")[1];
 
-//        mWebView.getSettings().setJavaScriptEnabled(true);
+        mWebView.getSettings().setJavaScriptEnabled(true);
 //        mWebView.loadUrl(videoURL);
 
         final Button btnWAKEUP = rootView.findViewById(R.id.frgm_1_wakeup_button);
@@ -89,6 +91,8 @@ public class Fragment_1 extends Fragment implements JoystickView.OnJoystickChang
                 btnAUTOROUTE.setEnabled(false);
                 btnTEST.setEnabled(false);
                 btnCTRL.setChecked(true);
+                text.setVisibility(View.VISIBLE);
+                mJoystickView.setVisibility(View.VISIBLE);
             }
         });
 
@@ -115,6 +119,8 @@ public class Fragment_1 extends Fragment implements JoystickView.OnJoystickChang
                 btnTEST.setEnabled(true);
                 btnCTRL.setChecked(false);
                 btnAUTOROUTE.setChecked(false);
+                text.setVisibility(View.INVISIBLE);
+                mJoystickView.setVisibility(View.INVISIBLE);
             }
         });
 

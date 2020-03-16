@@ -4,55 +4,48 @@
 
 static String command;
 static String value;
+static uint8_t stage = 0;
 
 
 /* remote command format is: {command=value} */
 bool __read_remote_cmd()
 {
 	char ch;
-	uint8_t stage = 0;
-
-	String command_tmp;
-	String value_tmp;
-
-	bool new_cmd = false;
+	bool is_new_cmd = false;
 
 	while (Serial3.available()) {
-
 		ch = Serial3.read();
 
-		switch (stage) {
-			case 0:
-				if (ch == '{') {
-					command_tmp = "";
-					stage = 1;
-				}
-				break;
-			case 1:
-				if (ch == '=') {
-					value_tmp = "";
-					stage = 2;
-				} else
-					command_tmp += ch;		// Saving command name
-				break;
-			case 2:
-				if (ch == '}') {
-					command = command_tmp;
-					value = value_tmp;
-					new_cmd = true;
-					stage = 0;
-				} else
-					value_tmp += ch;		// Saving command value
-				break;
+		if (ch == '{') {
+			command = "";
+			stage = 1;
+		} else {
+			switch (stage) {
+				case 1:
+					if (ch == '=') {
+						value = "";
+						stage = 2;
+					} else
+						command += ch;
+					break;
+				case 2:
+					if (ch == '}') {		// reached end of the command
+						is_new_cmd = true;
+						return is_new_cmd;
+					
+					} else
+						value += ch;
+					break;
+			}
 		}
 	}
-	return new_cmd;							// Serial3 is empty here
+	return is_new_cmd;						// incomplete command while RX buff is empty
 }
 
 
 void apply_remote_cmd()
 {
-	if (__read_remote_cmd()) {
+	while (__read_remote_cmd()) {
 		if (command == "a1"		&& on_control
 						&& position_up) {			// X-axis on gamepad (speed)
 			float a1_value = value.toFloat();

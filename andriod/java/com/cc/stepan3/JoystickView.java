@@ -81,11 +81,12 @@ public class JoystickView extends View {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        int actionFilter = 10; // only every 'actionFilter' action is processed
+        int actionFilter = 1; // only every 'actionFilter' action is processed
 
         x = event.getX();
         y = event.getY();
         float abs = (float) Math.sqrt((x - centerX) * (x - centerX) + (y - centerY) * (y - centerY));
+
         if (abs > joystickRadius) {
             x = ((x - centerX) * joystickRadius / abs + centerX);
             y = ((y - centerY) * joystickRadius / abs + centerY);
@@ -96,6 +97,7 @@ public class JoystickView extends View {
             y = centerY;
             return true;
         }
+
         lastX = getXValue();
         lastY = getYValue();
 
@@ -110,6 +112,7 @@ public class JoystickView extends View {
             } else if (actionMask == MotionEvent.ACTION_MOVE && actionCounter % actionFilter == 0) {
                 buttonColor = holo_blue_dark;
                 listener.setOnMovedListener(getXValue(), getYValue());
+                actionCounter++;
                 return true;
             } else if (actionMask == MotionEvent.ACTION_UP || actionMask == MotionEvent.ACTION_CANCEL) {
                 buttonColor = buttonGray;
@@ -117,7 +120,7 @@ public class JoystickView extends View {
                 y = centerY;
                 lastX = 0;
                 lastY = 0;
-                listener.setOnReleaseListener(0, 0);
+                listener.setOnReleaseListener(lastX, lastY);
                 return true;
             }
         }
