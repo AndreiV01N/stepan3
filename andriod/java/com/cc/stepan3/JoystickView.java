@@ -19,16 +19,17 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.util.AttributeSet;
+import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.View;
 
 public class JoystickView extends View {
     private OnJoystickChangeListener listener;
 
-    private final int holo_blue_dark = 0xFF0099CC;
-    private final int buttonGray = 0xFF5C5C5C;
+    private int colorBlue;
+    private int colorGray;
 
-    private int buttonColor = buttonGray;
+    private int buttonColor;
     private int actionCounter = 0;
 
     private float x, y;
@@ -46,6 +47,16 @@ public class JoystickView extends View {
 
     public JoystickView(Context context, AttributeSet attrs) {
         super(context, attrs);
+
+        TypedValue blue = new TypedValue();
+        context.getTheme().resolveAttribute(android.R.attr.colorAccent, blue, true);
+        this.colorBlue = blue.data;
+
+        TypedValue gray = new TypedValue();
+        context.getTheme().resolveAttribute(android.R.attr.colorButtonNormal, gray, true);
+        this.colorGray = gray.data;
+
+        buttonColor = colorGray;
     }
 
     public JoystickView(Context context, AttributeSet attrs, int defStyle) {
@@ -54,7 +65,7 @@ public class JoystickView extends View {
 
     @Override
     public void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        super.onMeasure(widthMeasureSpec, widthMeasureSpec); // Make the layout square
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec); // Make the layout square
         setMeasuredDimension(getMeasuredWidth(), getMeasuredWidth());
     }
 
@@ -71,7 +82,7 @@ public class JoystickView extends View {
 
         p.setStyle(Paint.Style.STROKE);
         p.setStrokeWidth(3);
-        p.setColor(buttonGray);
+        p.setColor(colorGray);
         canvas.drawCircle(centerX, centerY, joystickRadius, p);
         canvas.drawCircle(centerX, centerY, joystickRadius / 2, p);
         p.setColor(buttonColor);
@@ -106,16 +117,16 @@ public class JoystickView extends View {
         if (listener != null) {
             int actionMask = event.getActionMasked();
             if (actionMask == MotionEvent.ACTION_DOWN) {
-                buttonColor = holo_blue_dark;
+                buttonColor = colorBlue;
                 listener.setOnTouchListener(getXValue(), getYValue());
                 return true;
             } else if (actionMask == MotionEvent.ACTION_MOVE && actionCounter % actionFilter == 0) {
-                buttonColor = holo_blue_dark;
+                buttonColor = colorBlue;
                 listener.setOnMovedListener(getXValue(), getYValue());
                 actionCounter++;
                 return true;
             } else if (actionMask == MotionEvent.ACTION_UP || actionMask == MotionEvent.ACTION_CANCEL) {
-                buttonColor = buttonGray;
+                buttonColor = colorGray;
                 x = centerX;
                 y = centerY;
                 lastX = 0;
@@ -141,10 +152,10 @@ public class JoystickView extends View {
     }
 
     public interface OnJoystickChangeListener {
-        public void setOnTouchListener(double xValue, double yValue);
+        void setOnTouchListener(double xValue, double yValue);
 
-        public void setOnMovedListener(double xValue, double yValue);
+        void setOnMovedListener(double xValue, double yValue);
 
-        public void setOnReleaseListener(double xValue, double yValue);
+        void setOnReleaseListener(double xValue, double yValue);
     }
 }

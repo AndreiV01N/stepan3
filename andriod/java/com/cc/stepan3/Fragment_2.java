@@ -26,8 +26,8 @@ public class Fragment_2 extends Fragment {
     private float Pos_Kd_default = 0.20f;
     private float Spd_Kp_default = 0.06f;
     private float Spd_Ki_default = 0.08f;
-    private float Stb_Kp_default = 0.30f;
-    private float Stb_Kd_default = 0.10f;
+    private float Stb_Kp_default = 0.50f;
+    private float Stb_Kd_default = 0.15f;
 
     private float Pos_Kp_divider_f = bar_discrete / (Pos_Kp_default * 2.0f);
     private float Pos_Kd_divider_f = bar_discrete / (Pos_Kd_default * 2.0f);

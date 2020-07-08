@@ -15,10 +15,8 @@ public class UdpClient extends AsyncTask<String, Void, Void> {
         String ip_str = params[0];
         String port_str = params[1];
         String msg_str = params[2];
-        DatagramSocket ds = null;
 
-        try {
-            ds = new DatagramSocket();
+        try (DatagramSocket ds = new DatagramSocket()) {
             DatagramPacket dp;
             byte[] msg = msg_str.getBytes();
             int msg_length = msg_str.length();
@@ -26,12 +24,8 @@ public class UdpClient extends AsyncTask<String, Void, Void> {
             int port = Integer.parseInt(port_str);
             dp = new DatagramPacket(msg, msg_length, ip, port);
             ds.send(dp);
-        } catch(IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
-        } finally {
-            if (ds != null) {
-                ds.close();
-            }
         }
         return null;
     }

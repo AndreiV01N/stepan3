@@ -5,7 +5,6 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,10 +13,6 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
-import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
 import java.util.Locale;
 
 
@@ -26,6 +21,7 @@ public class Fragment_1 extends Fragment implements JoystickView.OnJoystickChang
     private SharedPreferences mSharedPrefs;
     private String ipAddr;
     private String udpPort;
+    private boolean isOnControl = false;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -41,8 +37,8 @@ public class Fragment_1 extends Fragment implements JoystickView.OnJoystickChang
 
         final JoystickView mJoystickView = rootView.findViewById(R.id.frgm_1_joystick);
         mJoystickView.setOnJoystickChangeListener(this);
-        MainActivity.joystickReleased = true;
-        mJoystickView.setVisibility(View.INVISIBLE);
+        if (! isOnControl)
+            mJoystickView.setVisibility(View.INVISIBLE);
 
         text = rootView.findViewById(R.id.frgm_1_text);
         text.setText(R.string.defaultJoystickValue);
@@ -57,13 +53,13 @@ public class Fragment_1 extends Fragment implements JoystickView.OnJoystickChang
         udpPort = udpSocket.split(":")[1];
 
         mWebView.getSettings().setJavaScriptEnabled(true);
-//        mWebView.loadUrl(videoURL);
+        mWebView.loadUrl(videoURL);
 
         final Button btnWAKEUP = rootView.findViewById(R.id.frgm_1_wakeup_button);
         final Button btnSLEEP = rootView.findViewById(R.id.frgm_1_sleep_button);
 
         final ToggleButton btnCTRL = rootView.findViewById(R.id.frgm_1_control_button);
-        Button btnRESET = rootView.findViewById(R.id.frgm_1_reset_button);
+        final Button btnRESET = rootView.findViewById(R.id.frgm_1_reset_button);
 
         final ToggleButton btnAUTOROUTE = rootView.findViewById(R.id.frgm_1_autoroute_button);
         final Button btnTEST = rootView.findViewById(R.id.frgm_1_test_button);
@@ -92,6 +88,7 @@ public class Fragment_1 extends Fragment implements JoystickView.OnJoystickChang
                 btnTEST.setEnabled(false);
                 btnCTRL.setChecked(true);
                 text.setVisibility(View.VISIBLE);
+                isOnControl = true;
                 mJoystickView.setVisibility(View.VISIBLE);
             }
         });
@@ -120,6 +117,7 @@ public class Fragment_1 extends Fragment implements JoystickView.OnJoystickChang
                 btnCTRL.setChecked(false);
                 btnAUTOROUTE.setChecked(false);
                 text.setVisibility(View.INVISIBLE);
+                isOnControl = false;
                 mJoystickView.setVisibility(View.INVISIBLE);
             }
         });
@@ -134,12 +132,11 @@ public class Fragment_1 extends Fragment implements JoystickView.OnJoystickChang
         return rootView;
     }
 
-    private void newData(double xValue, double yValue, boolean joystickReleased) {
+    private void newData(double xValue, double yValue, boolean isJoystickReleased) {
         if (xValue == 0 && yValue == 0)
-            joystickReleased = true;
+            isJoystickReleased = true;
 
-        MyViewPager.setPagingEnabled(joystickReleased);
-        MainActivity.joystickReleased = joystickReleased;
+        MyViewPager.setPagingEnabled(isJoystickReleased);
 
         text.setText(getString(R.string.x_y_label,
                                String.format(Locale.ENGLISH, "%.2f", xValue),
