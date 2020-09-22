@@ -46,15 +46,15 @@ bool __read_remote_cmd()
 void apply_remote_cmd()
 {
 	while (__read_remote_cmd()) {
-		if (command == "a1"		&& on_control
-						&& position_up) {			// X-axis on gamepad (speed)
-			float a1_value = value.toFloat();
-			speed_target = a1_value * MAX_SPEED_TARGET;
-
-		} else if (command == "a0"	&& on_control
-						&& position_up) {			// Y-axis on gamepad (steering)
+		if (command == "a0"		&& on_control
+						&& position_up) {			// X-axis on gamepad (steering)
 			float a0_value = value.toFloat();
 			steering = a0_value * K_STEERING_AXIS;
+
+		} else if (command == "a1"	&& on_control
+						&& position_up) {			// Y-axis on gamepad (speed)
+			float a1_value = value.toFloat();
+			speed_target = a1_value * MAX_SPEED_TARGET;
 
 		} else if (command == "b1"	&& value.toInt() == 1) {		// BUTTON-2 (reset)
 			on_route = false;
