@@ -19,7 +19,7 @@ Dec  2 2016 14:21:16
 #define EXT_AP_SSID		"SPOTTY"
 #define EXT_AP_PASSWORD		"passwd0123"
 
-#define SYSLOG_SERVER		"10.5.0.11"			// for ext AP
+#define SYSLOG_SERVER		"10.5.0.7"			// for ext AP
 
 static String AP_MAC;						// for local AP
 static String MY_IP;

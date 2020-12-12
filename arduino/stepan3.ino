@@ -35,14 +35,14 @@
 #define MAX_ACCEL_RISEUP		10
 #define MAX_DECCEL_RISEUP		50	// acts the same way as "ABS" in real vehecles
 
-#define TILT_BIAS			0.0f	// doesn't really matter (helps to prevent onetime short moving drift on start)
+#define TILT_BIAS			-5.0f	// doesn't really matter (helps to prevent onetime short moving drift on start)
 #define TILT_READY			60.0f	// robot's tilt is supposed as VERTICAL (within working sector)
 #define TILT_COMFORT			15.0f	// relates to LOOP_NUM_K_SOFT_START
 #define ROUTE_PAUSE			10000	// time between routes in ms (if standalone)
 #define SLEEP_TIMEOUT			2000	// in ms
 #define RISEUP_TIMEOUT			1000	// in ms
 
-#define BATTERY_PIN			A3	// 10-bit voltage of 6xAA on BATTERY_PIN (Vbatt -> 10kOhm -> BATTERY_PIN -> 3.2kOhm -> GND)
+#define BATTERY_PIN			A3	// 10-bit voltage of 6xAA on BATTERY_PIN (Vbatt -> 10kOhm -> BATTERY_PIN -> 3.3kOhm -> GND)
 						// 300 (totally exhausted AAs) ... 450 (new and fresh AAs)
 
 #define MODE				4	// 0 - networkless, standalone
