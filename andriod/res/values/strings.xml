@@ -3,11 +3,11 @@
     <string name="defaultJoystickValue">x: 0 y: 0</string>
     <string name="preference_video_url">edit_text_preference_1</string>
     <string name="preference_udp_socket">edit_text_preference_2</string>
-    <string name="default_video_url">http://192.168.194.139:8080/browserfs.html</string>
-    <string name="default_udp_socket">192.168.1.2:8080</string>
+    <string name="default_video_url">http://10.5.0.20:8080/browserfs.html</string>
+    <string name="default_udp_socket">10.5.0.30:1234</string>
     <string name="x_y_label">x: %1$s, y: %2$s</string>
-    <string name="control_url">http://%1$s/?%2$s=%3$s</string>
 
+    <string name="xy_axis_command">{a0=%1$s}{a1=%2$s}</string>
     <string name="x_axis_command">{a0=%1$s}</string>
     <string name="y_axis_command">{a1=%1$s}</string>
     <string name="wakeup_command">{b3=%1$s}</string>

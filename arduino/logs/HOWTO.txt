@@ -3,16 +3,13 @@
 # Copy the very last trip log data into separate log file and remove all syslog tags:
 
 LOG_FILE=/var/log/stepan3/telemetry.log
-LAST_TRIP_TS=`tac $LOG_FILE | grep 'ROBOT' | head -1 | sed 's/[\x0D\x0A]//g'`
-IP_ADDR=`echo $LAST_TRIP_TS | awk '{print $7}'`
+LAST_TRIP_TS=`tac $LOG_FILE | grep 'ROBOT' | head -1`
+IP_ADDR=`echo $LAST_TRIP_TS | awk '{print $4}'`
 
 cat $LOG_FILE						\
 | sed -n "/${LAST_TRIP_TS}/,\$p"			\
-| tail -n +2						\
-| sed 's/[\x0D\x0A]//g'					\
-| sed -rn "$!N;s/\n?[A-Za-z]{3}\s{1,2}[0-9]{1,2}\s[0-9]{2}:[0-9]{2}:[0-9]{2}\s(${IP_ADDR}\s)?//g;P;D"	\
+| sed -r "s/^.*${IP_ADDR}\s//g"				\
 | grep -E "^ spP\:"					\
 >./z.log
 
 # Verify carefully obtained z.log file for any gaps and omissions,
-# looks like my ESP drops data sometimes while sending it to syslog.

@@ -11,8 +11,10 @@
 static uint32_t sonar_trig_timer;
 static uint32_t sonar_ping_timer;
 static uint32_t sonar_busy_timer;
-static bool sonar_echo_high_waiting = false;		// waiting for  __--  once TRIG is bounced
-static bool sonar_echo_low_waiting = false;		// waiting for  --__
+static uint32_t sonar_delay_us = 0;
+
+static bool sonar_echo_high_waiting = false;		// waiting for "low-to-high" once TRIG is bounced
+static bool sonar_echo_low_waiting = false;		// waiting for "high-to-low"
 
 
 void sonar_pins_init()
@@ -52,7 +54,7 @@ ISR(TIMER4_COMPA_vect)
 	}
 
 	if (sonar_echo_low_waiting) {
-		if (!digitalRead(SONAR_ECHO_PIN)) {				// got LOW on ECHO_PIN - the delay can be calculated
+		if (!digitalRead(SONAR_ECHO_PIN)) {				// got LOW on ECHO_PIN - the 'distance' can be calculated
 			sonar_echo_low_waiting = false;
 			sonar_delay_us = micros() - sonar_ping_timer;
 			sonar_dist_cm = float(sonar_delay_us) * 0.01715f;	// (0.0343 cm/us / 2)
@@ -66,8 +68,8 @@ ISR(TIMER4_COMPA_vect)
 		return;
 	}
 
-	if (!sonar_ready && (micros() - sonar_busy_timer) > SONAR_BUSY_TIMEOUT_uS)
-		sonar_ready = true;
+	if (!is_sonar_ready && (micros() - sonar_busy_timer) > SONAR_BUSY_TIMEOUT_uS)
+		is_sonar_ready = true;
 }
 
 
@@ -79,7 +81,7 @@ void sonar_send_ping()
 	delayMicroseconds(10);
 	digitalWrite(SONAR_TRIG_PIN, LOW);
 	sonar_trig_timer = micros();
-	sonar_ready = false;
+	is_sonar_ready = false;
 	sonar_echo_high_waiting = true;
 	sonar_echo_low_waiting = false;
 }
