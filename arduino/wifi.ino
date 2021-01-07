@@ -55,9 +55,7 @@ void esp8266_connect_to_ap()
 	esp8266_send_cmd(cmd, "OK", 15000, ECHO);
 	esp8266_send_cmd("AT+CWJAP_CUR?", "OK", 2000, ECHO);	// AP details
 	esp8266_send_cmd("AT+CIPSTA_CUR?", "OK", 2000, ECHO);	// shows my ip, gateway, netmask
-#ifdef SYSLOG
 	strcpy(syslog_ip, STA_MODE_SYSLOG_IP);
-#endif
 }
 #endif
 
@@ -107,9 +105,7 @@ bool esp8266_is_any_sta_online()
 		Serial.println();
 		Serial.print(F("Online STA: "));
 		Serial.println(sta_ip);
-#ifdef SYSLOG
 		strcpy(syslog_ip, sta_ip);
-#endif
 		return true;
 	} else
 		return false;
@@ -178,7 +174,7 @@ void logger_telemetry(char *msg)			// is called once per system loop
 		if (esp8266_rx_buff_parser_wrapper(8, syslog_ip, __parse_loop_data, NO_RET_ON_EMPTY_BUFF, NO_ECHO) == 0) {
 			Serial3.print(msg);		// send a message to syslog as soon as '> ' prompt appears
 			is_msg_sent = true;
-		} else {				// did not get a prompt '> ' in time, the msg is lost
+		} else {				// did not catch a prompt '> ' in time, the msg will be saved until next time
 			strcpy(msg_backup, msg);
 			msg_backup[0] = '*';
 			is_msg_sent = false;

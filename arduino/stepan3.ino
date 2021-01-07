@@ -2,7 +2,8 @@
 #define GY_85				1
 #define GY_87				0
 
-#define TILT_AXIS_X			1	// or _Y (depends on how the IMU/AHRS board is positioned inside)
+#define TILT_AXIS_X			1	// depends on how the IMU/AHRS board is positioned inside
+#define TILT_AXIS_Y			0
 
 #define DEBUG_IMU			0	// if this is set to 1, one of 4 below should be set to 1 as well
 #define DEBUG_IMU_RAW_DATA		0

@@ -12,7 +12,7 @@
 
 #if FILTER_MADGWICK
 #define FILTER_BETA_NORMAL		0.02f
-#define FILTER_BETA_STAB		1.0f
+#define FILTER_BETA_STAB		4.0f
 #include "src/MadgwickAHRS/MadgwickAHRS.h"		// pls note, the .h has been modified in order to set custom 'beta' and get q-vectors
 static Madgwick filter;
 #endif
@@ -140,6 +140,7 @@ void __imu_stab()
 	int8_t x_delta_sign_ref, y_delta_sign_ref, z_delta_sign_ref;		// -1, 0, 1
 	int8_t x_delta_sign_now, y_delta_sign_now, z_delta_sign_now;		// -1, 0, 1
 
+	uint16_t counter = 0;
 	uint32_t start_stab_ms = millis();
 
 #if FILTER_MADGWICK
@@ -188,6 +189,21 @@ void __imu_stab()
 
 		imu_read_data();
 
+#if TILT_AXIS_X
+		if (x_pre != axis_x) {
+			x_delta_sign_now = fabs(axis_x - x_pre) / (axis_x - x_pre);
+			if (x_delta_sign_now != x_delta_sign_ref && y_stab && z_stab)
+				x_stab = true;
+		} else if (y_stab && z_stab)
+			x_stab = true;
+
+		if (y_pre != axis_y) {
+			y_delta_sign_now = fabs(axis_y - y_pre) / (axis_y - y_pre);
+			if (y_delta_sign_now != y_delta_sign_ref)
+				y_stab = true;
+		} else
+			y_stab = true;
+#elif TILT_AXIS_Y
 		if (x_pre != axis_x) {
 			x_delta_sign_now = fabs(axis_x - x_pre) / (axis_x - x_pre);
 			if (x_delta_sign_now != x_delta_sign_ref)
@@ -197,10 +213,11 @@ void __imu_stab()
 
 		if (y_pre != axis_y) {
 			y_delta_sign_now = fabs(axis_y - y_pre) / (axis_y - y_pre);
-			if (y_delta_sign_now != y_delta_sign_ref)
+			if (y_delta_sign_now != y_delta_sign_ref && x_stab && z_stab)
 				y_stab = true;
-		} else
+		} else if (x_stab && z_stab)
 			y_stab = true;
+#endif
 
 		if (z_pre != axis_z) {
 			z_delta_sign_now = fabs(axis_z - z_pre) / (axis_z - z_pre);
@@ -209,30 +226,30 @@ void __imu_stab()
 		} else
 			z_stab = true;
 #ifdef SYSLOG
-		strcpy(syslog_msg, "STAB: ");
-		dtostrf(axis_x, 7, 2, syslog_msg + strlen(syslog_msg));
-		dtostrf(axis_y, 7, 2, syslog_msg + strlen(syslog_msg));
-		dtostrf(axis_z, 7, 2, syslog_msg + strlen(syslog_msg));
-		logger_common(syslog_msg);
-
-		strcpy(syslog_msg, "STAB: ");
+		sprintf(syslog_msg, " STAB: (%d)", counter);
 		if (x_stab)
-			sprintf(syslog_msg + strlen(syslog_msg), "X:True  ");
+			sprintf(syslog_msg + strlen(syslog_msg), "\tX:True  ");
 		else
-			sprintf(syslog_msg + strlen(syslog_msg), "X:False ");
+			sprintf(syslog_msg + strlen(syslog_msg), "\tX:False ");
+		dtostrf(axis_x, 7, 2, syslog_msg + strlen(syslog_msg));
 
 		if (y_stab)
-			sprintf(syslog_msg + strlen(syslog_msg), "Y:True  ");
+			sprintf(syslog_msg + strlen(syslog_msg), "\t\tY:True  ");
 		else
-			sprintf(syslog_msg + strlen(syslog_msg), "Y:False ");
+			sprintf(syslog_msg + strlen(syslog_msg), "\t\tY:False ");
+		dtostrf(axis_y, 7, 2, syslog_msg + strlen(syslog_msg));
 
 		if (z_stab)
-			sprintf(syslog_msg + strlen(syslog_msg), "Z:True  ");
+			sprintf(syslog_msg + strlen(syslog_msg), "\t\tZ:True  ");
 		else
-			sprintf(syslog_msg + strlen(syslog_msg), "Z:False ");
-		logger_common(syslog_msg);
+			sprintf(syslog_msg + strlen(syslog_msg), "\t\tZ:False ");
+		dtostrf(axis_z, 7, 2, syslog_msg + strlen(syslog_msg));
+
+		logger_telemetry(syslog_msg);
 #endif
+		counter++;
 	}
+	delay(20);
 
 #if FILTER_MADGWICK
 	filter.beta = FILTER_BETA_NORMAL;
@@ -242,7 +259,7 @@ void __imu_stab()
 	filter.twoKp = FILTER_KP_NORMAL;
 #endif
 #ifdef SYSLOG
-	sprintf(syslog_msg, "STAB: All YPR have stabilized in %lu ms", millis() - start_stab_ms);
+	sprintf(syslog_msg, " STAB: All YPR have stabilized in %lu ms (%d cycles)", millis() - start_stab_ms, counter);
 	logger_common(syslog_msg);
 #endif
 }
