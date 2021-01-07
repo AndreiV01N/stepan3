@@ -153,14 +153,18 @@ void __imu_stab()
 
 #if FILTER_MADGWICK
 	filter.beta = FILTER_BETA_STAB;
-	Serial3.print(F("Stabilizing Madgwick filter params on start with beta = "));
-	Serial3.println(filter.beta, 4);
+#ifdef SYSLOG
+	append_float_to_str(syslog_msg, "GY521: Stabilizing Madgwick filter params on start with beta = ", filter.beta, 4);
+	logger_common(syslog_msg);
+#endif
 #endif
 
 #if FILTER_MAHONY
 	filter.twoKp = FILTER_KP_STAB;
-	Serial3.print(F("Stabilizing Mahony filter params on start with Kp = "));
-	Serial3.println(filter.twoKp, 4);
+#ifdef SYSLOG
+	append_float_to_str(syslog_msg, "GY521: Stabilizing Mahony filter params on start with Kp = ", filter.twoKp, 4);
+	logger_common(syslog_msg);
+#endif
 #endif
 	for (i = 0; i < 5; i++)
 		imu_read_data();
@@ -213,24 +217,30 @@ void __imu_stab()
 				z_stab = true;
 		} else
 			z_stab = true;
+#ifdef SYSLOG
+		strcpy(syslog_msg, "STAB: ");
+		dtostrf(axis_x, 7, 2, syslog_msg + strlen(syslog_msg));
+		dtostrf(axis_y, 7, 2, syslog_msg + strlen(syslog_msg));
+		dtostrf(axis_z, 7, 2, syslog_msg + strlen(syslog_msg));
+		logger_common(syslog_msg);
 
-
-		Serial3.print(F("\nSTAB:\t"));
+		strcpy(syslog_msg, "STAB: ");
 		if (x_stab)
-			Serial3.print(F("X:True\t"));
+			sprintf(syslog_msg + strlen(syslog_msg), "X:True  ");
 		else
-			Serial3.print(F("X:False\t"));
+			sprintf(syslog_msg + strlen(syslog_msg), "X:False ");
 
 		if (y_stab)
-			Serial3.print(F("Y:True\t"));
+			sprintf(syslog_msg + strlen(syslog_msg), "Y:True  ");
 		else
-			Serial3.print(F("Y:False\t"));
+			sprintf(syslog_msg + strlen(syslog_msg), "Y:False ");
 
 		if (z_stab)
-			Serial3.println(F("Z:True"));
+			sprintf(syslog_msg + strlen(syslog_msg), "Z:True  ");
 		else
-			Serial3.println(F("Z:False"));
-
+			sprintf(syslog_msg + strlen(syslog_msg), "Z:False ");
+		logger_common(syslog_msg);
+#endif
 	}
 
 #if FILTER_MADGWICK
@@ -240,8 +250,10 @@ void __imu_stab()
 #if FILTER_MAHONY
 	filter.twoKp = FILTER_KP_NORMAL;
 #endif
-	Serial3.print(F("\nSTAB: All YPR have stabilized in ms: "));
-	Serial3.println(millis() - start_stab_ms);
+#ifdef SYSLOG
+	sprintf(syslog_msg, "STAB: All YPR have stabilized in %lu ms", millis() - start_stab_ms);
+	logger_common(syslog_msg);
+#endif
 #endif	// not USE_DMP
 }
 

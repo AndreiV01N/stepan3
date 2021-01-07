@@ -72,7 +72,7 @@ void follow_route()
 				target_step_M1 = step_M1;
 				target_step_M2 = step_M2;
 				route_point = 0;
-#ifdef STANDALONE
+#ifndef REMOTE_CTL
 				on_route = false;
 				timer_route_ms = millis();
 #endif

@@ -18,7 +18,7 @@
 
 #if GY_85
 #define KP_STAB				0.50f
-#define KD_STAB				0.15f
+#define KD_STAB				0.20f
 #else
 #define KP_STAB				0.30f
 #define KD_STAB				0.10f
@@ -35,7 +35,10 @@
 #define MAX_ACCEL_RISEUP		10
 #define MAX_DECCEL_RISEUP		50	// acts the same way as "ABS" in real vehecles
 
-#define TILT_BIAS			-5.0f	// doesn't really matter (helps to prevent onetime short moving drift on start)
+#define MAX_LEN_REMOTE_CMD		6
+#define MAX_LEN_REMOTE_CMD_VAL		9
+
+#define TILT_BIAS			-0.0f	// doesn't really matter (helps to prevent onetime short moving drift on start)
 #define TILT_READY			60.0f	// robot's tilt is supposed as VERTICAL (within working sector)
 #define TILT_COMFORT			15.0f	// relates to LOOP_NUM_K_SOFT_START
 #define ROUTE_PAUSE			10000	// time between routes in ms (if standalone)
@@ -45,43 +48,66 @@
 #define BATTERY_PIN			A3	// 10-bit voltage of 6xAA on BATTERY_PIN (Vbatt -> 10kOhm -> BATTERY_PIN -> 3.3kOhm -> GND)
 						// 300 (totally exhausted AAs) ... 450 (new and fresh AAs)
 
-#define MODE				4	// 0 - networkless, standalone
-						// 1 - internal AP, standalone
-						// 2 - internal AP, remote control
-						// 3 - external AP, standalone
-						// 4 - external AP, remote control
-#if MODE == 0
-#define STANDALONE
-#endif
+#define ECHO				true
+#define NO_ECHO				false
+
+#define RET_ON_EMPTY_BUFF		true
+#define NO_RET_ON_EMPTY_BUFF		false
+
+#define MODE				6	// 0 - networkless, standalone
+						// 1 - AP, syslog only
+						// 2 - AP, remote control only
+						// 3 - AP, remote control + syslog
+						// 4 - STA, syslog only
+						// 5 - STA, remote control only
+						// 6 - STA, remote control + syslog
 
 #if MODE == 1
-#define WIFI_INTERNAL_AP
-#define STANDALONE
+#define WIFI_AP_MODE
+#define SYSLOG					// the first connected STA is considered as a syslog-server
 #endif
 
 #if MODE == 2
-#define WIFI_INTERNAL_AP
-#define COMMAND_CENTER
+#define WIFI_AP_MODE
+#define REMOTE_CTL
 #endif
 
 #if MODE == 3
-#define WIFI_EXTERNAL_AP
-#define STANDALONE
+#define WIFI_AP_MODE
+#define REMOTE_CTL
+#define SYSLOG					// the first connected STA is considered as a syslog-server
 #endif
 
 #if MODE == 4
-#define WIFI_EXTERNAL_AP
-#define COMMAND_CENTER
+#define WIFI_STA_MODE
+#define SYSLOG
 #endif
 
-#include <util/delay.h>
+#if MODE == 5
+#define WIFI_STA_MODE
+#define REMOTE_CTL
+#endif
 
+#if MODE == 6
+#define WIFI_STA_MODE
+#define REMOTE_CTL
+#define SYSLOG
+#endif
 
-float axis_x;				// roll by default
-float axis_y;				// pitch by default
-float axis_z;				// yaw by default
+#ifdef SYSLOG
+char syslog_msg[255];
+#endif
 
-float tilt_now;				// near zero if vertical, positive if tilt forward
+#ifdef REMOTE_CTL
+char remote_cmd[MAX_LEN_REMOTE_CMD + 1];		// 6 + 1
+char remote_cmd_val[MAX_LEN_REMOTE_CMD_VAL + 1];	// 9 + 1
+#endif
+
+float axis_x;				// roll by default (in deg.)
+float axis_y;				// pitch by default (in deg.)
+float axis_z;				// yaw by default (in deg.)
+
+float tilt_now;				// near zero if vertical, positive if tilt forward (in deg.)
 float tilt_target_raw = 0.f;
 float tilt_target = 0.f;
 
@@ -89,7 +115,7 @@ float speed_now;			// avg(speed_M1, speed_M2)
 float speed_target_raw = 0.f;		// all of speed_* below are in "full steps"/sec (1 wheel rotation eq 200 full steps)
 float speed_target = 0.f;		// e.g. speed_target=200 means 1 wheel rotation per second (approx 0.3 m/s)
 
-float dt_f_ms;
+float dt_f_s;				// loop duty - is used by PID regulators
 
 float Kp_pos = KP_POSITION;
 float Kd_pos = KD_POSITION;
@@ -124,7 +150,6 @@ uint32_t timer_riseup_ms;
 uint32_t timer_route_ms;
 uint32_t timer_sleep_ms;
 uint32_t loop_number = 0;
-uint32_t sonar_delay_us = 0;
 
 int16_t max_accel = MAX_ACCEL_NORMAL;
 int16_t max_deccel = MAX_DECCEL_NORMAL;
@@ -145,14 +170,20 @@ bool on_route = false;			// 'true' means the robot is now following predefined r
 bool on_riseup = false;			// 'true' means the robot is now trying to reach abs(TILT_READY) from laying position
 bool on_control = false;		// 'true' means robot's movements are now controlled remotely
 bool on_soft_start = false;		// 'true' means Kp_stab and Kd_stab are being corrected
-bool syslog_is_online = false;
-bool node_connected = false;
-bool sonar_ready = true;
+bool is_sta_online = false;
+bool is_sonar_ready = true;
 
 
 int16_t my_round(float x)
 {
 	return (int)(x + (x < 0 ? -0.5f : 0.5f));
+}
+
+
+void append_float_to_str(char *str, const char *tag, float f, const uint8_t prec)
+{
+	strcat(str, tag);
+	dtostrf(f, prec + 5, prec, str + strlen(str));
 }
 
 
@@ -169,30 +200,26 @@ float get_tilt()
 void setup()
 {
 	Serial.begin(115200);
+	Serial3.begin(115200);
 
 #if DEBUG_IMU
 	imu_init();						// can take a few seconds
 #else
 
-#ifdef WIFI_EXTERNAL_AP
-	Serial3.begin(115200);
-	esp8266_connect_to_ext_ap();
-
-	while (!node_connected)
-		node_connected = esp8266_ipservices_init();
+#ifdef WIFI_STA_MODE
+	esp8266_connect_to_ap();
+	esp8266_ipservices_init();
 #endif
 
-#ifdef WIFI_INTERNAL_AP
-	Serial3.begin(115200);
+#ifdef WIFI_AP_MODE
 	esp8266_init_local_ap();
 
-	while (!syslog_is_online) {
-		syslog_is_online = esp8266_check_node();
+	while (!is_sta_online) {
+		is_sta_online = esp8266_is_any_sta_online();
 		delay(1000);
 	}
 
-	while (!node_connected)
-		node_connected = esp8266_ipservices_init();
+	esp8266_ipservices_init();
 #endif
 
 	motor_pins_init();
@@ -207,13 +234,14 @@ void setup()
 		is_awake = true;
 		timer_route_ms = millis();
 		timer_pid_us = micros();
-		timer_loop_ms = millis();
 		if (fabs(tilt_now) < TILT_COMFORT)
 			on_soft_start = true;
 	} else {
 		position_up = false;
 		stall();
 	}
+
+	timer_loop_ms = millis();
 #endif		// not DEBUG_IMU
 }
 
@@ -227,11 +255,6 @@ void loop()
 #endif
 
 #else	// not DEBUG_IMU
-
-#ifdef COMMAND_CENTER
-	apply_remote_cmd();
-#endif
-
 	imu_read_data();
 	tilt_now = get_tilt();
 
@@ -245,7 +268,7 @@ void loop()
 					if (loop_number == LOOP_NUM_K_SOFT_START)
 						on_soft_start = false;
 				}
-#ifdef STANDALONE
+#ifndef REMOTE_CTL
 				if (!on_route) {
 					dt_ms = millis() - timer_route_ms;
 					if (dt_ms > ROUTE_PAUSE) {
@@ -303,7 +326,7 @@ void loop()
 				dt_ms = millis() - timer_sleep_ms;
 				if (dt_ms > SLEEP_TIMEOUT) {
 					is_awake = true;
-#ifdef STANDALONE
+#ifndef REMOTE_CTL
 					on_riseup = true;	// auto-riseup if standalone
 #endif
 				}
@@ -325,13 +348,13 @@ void loop()
 			speed_target = 0;
 
 		now_us = micros();
-		dt_f_ms = (float)(now_us - timer_pid_us) / 1000000.f;
+		dt_f_s = (float)(now_us - timer_pid_us) / 1000000.f;
 		timer_pid_us = now_us;
 
-		tilt_target_raw = speed_PI_control(dt_f_ms, speed_now, speed_target, Kp_speed, Ki_speed);
+		tilt_target_raw = speed_PI_control(dt_f_s, speed_now, speed_target, Kp_speed, Ki_speed);
 		tilt_target     = constrain(tilt_target_raw, -MAX_TILT_TARGET, MAX_TILT_TARGET);		// -35..+35
 
-		control_output_raw += stability_PD_control(dt_f_ms, tilt_now, tilt_target, Kp_stab, Kd_stab);
+		control_output_raw += stability_PD_control(dt_f_s, tilt_now, tilt_target, Kp_stab, Kd_stab);
 		control_output      = constrain(control_output_raw, -MAX_CONTROL_OUTPUT, MAX_CONTROL_OUTPUT);	// -700..+700
 
 		if (on_route)
@@ -345,7 +368,7 @@ void loop()
 		set_speed_M1(control_M1);
 		set_speed_M2(control_M2);
 
-		if (sonar_ready)
+		if (is_sonar_ready)
 			sonar_send_ping();
 	}
 
@@ -356,25 +379,29 @@ void loop()
 	dt_ms = now_ms - timer_loop_ms;
 	timer_loop_ms = now_ms;
 
-#if defined(WIFI_EXTERNAL_AP) || defined(WIFI_INTERNAL_AP)		// sending the telemetry to syslog..
-//	Serial3.print(F(" UPT: "));			Serial3.print(now_ms);
-	Serial3.print(F(" LPN: "));			Serial3.print(loop_number);
-	Serial3.print(F(" LPT: "));			Serial3.print(dt_ms);
-//	Serial3.print(F(" BATT: "));			Serial3.print(battery_raw);
-	Serial3.print(F(" SPD: "));			Serial3.print(speed_now);
-	Serial3.print(F(" SPDt: "));			Serial3.print(speed_target);
-	Serial3.print(F(" TLT: "));			Serial3.print(tilt_now);
-	Serial3.print(F(" TLTt: "));			Serial3.print(tilt_target);
-	Serial3.print(F(" COUT: "));			Serial3.println(control_output);
-//	Serial3.print(F(" DST: "));			Serial3.print(sonar_dist_cm);
-//	Serial3.print(F(" YAW: "));			Serial3.println(axis_z);
+#ifdef SYSLOG
+/*
+Attention!
+Too many params here increases loop duty time a lot.
+Ideally dt_ms value should not exceed 16-17 ms.
+Otherwise you'll face some tremors and other misbehaves..
+*/
 
-//	Serial3.print(F(" STP_M1: "));			Serial3.print(step_M1);
-//	Serial3.print(F(" STP_M2: "));			Serial3.print(step_M2);
-//	Serial3.print(F(" M1_p_ct: "));			Serial3.print(M1_pos_ctl);
-//	Serial3.print(F(" M2_p_ct: "));			Serial3.print(M2_pos_ctl);
-//	Serial3.print(F(" SPD_M1: "));			Serial3.print(speed_M1);
-//	Serial3.print(F(" SPD_M2: "));			Serial3.print(speed_M2);
+	sprintf(syslog_msg + strlen(syslog_msg), " LPN: %lu", loop_number);
+	sprintf(syslog_msg + strlen(syslog_msg), " LPT: %lu", dt_ms);
+//	sprintf(syslog_msg + strlen(syslog_msg), " BAT: %u", battery_raw);
+
+//	append_float_to_str(syslog_msg, " DST: ", sonar_dist_cm, 2);
+	append_float_to_str(syslog_msg, " SPD: ", speed_now, 2);
+//	append_float_to_str(syslog_msg, " SPDt: ", speed_target, 2);
+	append_float_to_str(syslog_msg, " TLT: ", tilt_now, 2);
+	append_float_to_str(syslog_msg, " TLTt: ", tilt_target, 2);
+	append_float_to_str(syslog_msg, " COUT: ", control_output, 2);
+//	append_float_to_str(syslog_msg, " YAW: ", axis_z, 2);
+
+	logger_telemetry(syslog_msg);
+#elif defined REMOTE_CTL
+	esp8266_rx_buff_parser_wrapper(8, remote_cmd, __parse_loop_data, RET_ON_EMPTY_BUFF, NO_ECHO);
 #endif
 
 #endif	// not DEBUG_IMU

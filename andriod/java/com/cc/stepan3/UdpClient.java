@@ -34,5 +34,4 @@ public class UdpClient extends AsyncTask<String, Void, Void> {
     protected void onPostExecute(Void result) {
         super.onPostExecute(result);
     }
-
 }

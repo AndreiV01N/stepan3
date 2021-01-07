@@ -17,11 +17,12 @@ import java.util.Locale;
 
 
 public class Fragment_1 extends Fragment implements JoystickView.OnJoystickChangeListener {
-    private TextView text;
+    private TextView xy_pos_text;
     private SharedPreferences mSharedPrefs;
     private String ipAddr;
     private String udpPort;
     private boolean isOnControl = false;
+    private boolean isOnAutoroute = false;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -40,9 +41,9 @@ public class Fragment_1 extends Fragment implements JoystickView.OnJoystickChang
         if (! isOnControl)
             mJoystickView.setVisibility(View.INVISIBLE);
 
-        text = rootView.findViewById(R.id.frgm_1_text);
-        text.setText(R.string.defaultJoystickValue);
-        text.setVisibility(View.INVISIBLE);
+        xy_pos_text = rootView.findViewById(R.id.frgm_1_text);
+        xy_pos_text.setText(R.string.defaultJoystickValue);
+        xy_pos_text.setVisibility(View.INVISIBLE);
 
         String defaultVideoURL = getResources().getString(R.string.default_video_url);
         String videoURL = mSharedPrefs.getString(getString(R.string.preference_video_url), defaultVideoURL);
@@ -63,6 +64,38 @@ public class Fragment_1 extends Fragment implements JoystickView.OnJoystickChang
 
         final ToggleButton btnAUTOROUTE = rootView.findViewById(R.id.frgm_1_autoroute_button);
         final Button btnTEST = rootView.findViewById(R.id.frgm_1_test_button);
+
+        if (isOnControl) {
+            btnWAKEUP.setEnabled(false);
+            btnSLEEP.setEnabled(false);
+            btnCTRL.setChecked(true);
+            btnCTRL.setEnabled(true);
+            btnAUTOROUTE.setChecked(false);
+            btnAUTOROUTE.setEnabled(false);
+            btnTEST.setEnabled(false);
+            xy_pos_text.setVisibility(View.VISIBLE);
+            mJoystickView.setVisibility(View.VISIBLE);
+        } else if (isOnAutoroute){
+            btnWAKEUP.setEnabled(false);
+            btnSLEEP.setEnabled(false);
+            btnCTRL.setChecked(false);
+            btnCTRL.setEnabled(false);
+            btnAUTOROUTE.setChecked(true);
+            btnAUTOROUTE.setEnabled(true);
+            btnTEST.setEnabled(false);
+            xy_pos_text.setVisibility(View.INVISIBLE);
+            mJoystickView.setVisibility(View.INVISIBLE);
+        } else {
+            btnWAKEUP.setEnabled(true);
+            btnSLEEP.setEnabled(true);
+            btnCTRL.setChecked(false);
+            btnCTRL.setEnabled(true);
+            btnAUTOROUTE.setChecked(false);
+            btnAUTOROUTE.setEnabled(true);
+            btnTEST.setEnabled(true);
+            xy_pos_text.setVisibility(View.INVISIBLE);
+            mJoystickView.setVisibility(View.INVISIBLE);
+        }
 
         btnWAKEUP.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -87,9 +120,9 @@ public class Fragment_1 extends Fragment implements JoystickView.OnJoystickChang
                 btnAUTOROUTE.setEnabled(false);
                 btnTEST.setEnabled(false);
                 btnCTRL.setChecked(true);
-                text.setVisibility(View.VISIBLE);
-                isOnControl = true;
+                xy_pos_text.setVisibility(View.VISIBLE);
                 mJoystickView.setVisibility(View.VISIBLE);
+                isOnControl = true;
             }
         });
 
@@ -102,6 +135,7 @@ public class Fragment_1 extends Fragment implements JoystickView.OnJoystickChang
                 btnCTRL.setEnabled(false);
                 btnTEST.setEnabled(false);
                 btnAUTOROUTE.setChecked(true);
+                isOnAutoroute = true;
             }
         });
 
@@ -116,9 +150,10 @@ public class Fragment_1 extends Fragment implements JoystickView.OnJoystickChang
                 btnTEST.setEnabled(true);
                 btnCTRL.setChecked(false);
                 btnAUTOROUTE.setChecked(false);
-                text.setVisibility(View.INVISIBLE);
-                isOnControl = false;
+                xy_pos_text.setVisibility(View.INVISIBLE);
                 mJoystickView.setVisibility(View.INVISIBLE);
+                isOnControl = false;
+                isOnAutoroute = false;
             }
         });
 
@@ -138,15 +173,14 @@ public class Fragment_1 extends Fragment implements JoystickView.OnJoystickChang
 
         MyViewPager.setPagingEnabled(isJoystickReleased);
 
-        text.setText(getString(R.string.x_y_label,
+        xy_pos_text.setText(getString(R.string.x_y_label,
                                String.format(Locale.ENGLISH, "%.2f", xValue),
                                String.format(Locale.ENGLISH, "%.2f", yValue)));
 
         new UdpClient().execute(ipAddr, udpPort,
-                getString(R.string.x_axis_command, String.format(Locale.ENGLISH, "%.2f", xValue)));
-
-        new UdpClient().execute(ipAddr, udpPort,
-                getString(R.string.y_axis_command, String.format(Locale.ENGLISH, "%.2f", yValue)));
+                                getString(R.string.xy_axis_command,
+                                          String.format(Locale.ENGLISH, "%.2f", xValue),
+                                          String.format(Locale.ENGLISH, "%.2f", yValue)));
     }
 
     @Override
