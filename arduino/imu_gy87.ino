@@ -194,6 +194,8 @@ void __imu_stab()
 			x_delta_sign_now = fabs(axis_x - x_pre) / (axis_x - x_pre);
 			if (x_delta_sign_now != x_delta_sign_ref && y_stab && z_stab)
 				x_stab = true;
+			else
+				x_delta_sign_ref = x_delta_sign_now;
 		} else if (y_stab && z_stab)
 			x_stab = true;
 
@@ -215,6 +217,8 @@ void __imu_stab()
 			y_delta_sign_now = fabs(axis_y - y_pre) / (axis_y - y_pre);
 			if (y_delta_sign_now != y_delta_sign_ref && x_stab && z_stab)
 				y_stab = true;
+			else
+				y_delta_sign_ref = y_delta_sign_now;
 		} else if (x_stab && z_stab)
 			y_stab = true;
 #endif
